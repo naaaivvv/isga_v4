@@ -55,7 +55,7 @@ export const SingleGasCalibrationSection = ({
           )}
         </div>
         <CardDescription>
-          30 readings over 4 minutes | Critical t-value: ±2.045
+          30 readings over 3 minutes | Critical t-value: ±2.045
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -108,7 +108,7 @@ export const SingleGasCalibrationSection = ({
 
         {/* Results Display */}
         {hasResults && (
-          <div className="space-y-3 p-4 bg-muted rounded-lg">
+          <div className={`space-y-3 p-4 rounded-lg ${calibrationData.passed ? 'bg-green-50 border-2 border-green-500' : 'bg-red-50 border-2 border-red-500'}`}>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground">Reference Value</p>

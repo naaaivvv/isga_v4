@@ -16,7 +16,7 @@ type GasType = 'CO' | 'CO2' | 'O2';
 
 const BACKEND_URL = 'http://192.168.1.9/isga_v4/php-backend';
 const TOTAL_READINGS = 30;
-const READING_INTERVAL_MS = 8000; // 8 seconds between readings (240s total / 30 readings)
+const READING_INTERVAL_MS = 6000; // 6 seconds between readings (180s total / 30 readings)
 const CRITICAL_T_VALUE = 2.045; // For n=30, df=29, α=0.05
 
 const createEmptyCalibrationData = (defaultRef = 0): GasCalibrationData => ({
@@ -49,7 +49,7 @@ export const useCalibration = () => {
     };
   };
 
-  const startCoCalibration = async (coReference: number) => {
+  const startCoCalibration = async (coReference: number, onProgress?: (collected: number, total: number) => void) => {
     if (isNaN(coReference)) {
       toast({
         title: "Reference Value Required",
@@ -63,7 +63,7 @@ export const useCalibration = () => {
 
     toast({
       title: "CO Calibration Started",
-      description: `Capturing 30 readings over 4 minutes...`,
+      description: `Capturing 30 readings over 3 minutes...`,
     });
 
     try {
@@ -73,6 +73,11 @@ export const useCalibration = () => {
         const sensorData = await fetchSensorData();
         const coValue = Math.min(sensorData.co, 2000); // Cap at 2000 ppm
         coReadings.push(coValue);
+
+        // Update progress
+        if (onProgress) {
+          onProgress(i + 1, TOTAL_READINGS);
+        }
 
         if (i < TOTAL_READINGS - 1) {
           await new Promise(resolve => setTimeout(resolve, READING_INTERVAL_MS));
@@ -117,7 +122,7 @@ export const useCalibration = () => {
     }
   };
 
-  const startCo2O2Calibration = async (co2Reference: number, o2Reference: number) => {
+  const startCo2O2Calibration = async (co2Reference: number, o2Reference: number, onProgress?: (collected: number, total: number) => void) => {
     if (isNaN(co2Reference) || isNaN(o2Reference)) {
       toast({
         title: "Reference Values Required",
@@ -131,7 +136,7 @@ export const useCalibration = () => {
 
     toast({
       title: "CO2 & O2 Calibration Started",
-      description: `Capturing 30 readings over 4 minutes...`,
+      description: `Capturing 30 readings over 3 minutes...`,
     });
 
     try {
@@ -142,6 +147,11 @@ export const useCalibration = () => {
         const sensorData = await fetchSensorData();
         co2Readings.push(sensorData.co2);
         o2Readings.push(sensorData.o2);
+
+        // Update progress
+        if (onProgress) {
+          onProgress(i + 1, TOTAL_READINGS);
+        }
 
         if (i < TOTAL_READINGS - 1) {
           await new Promise(resolve => setTimeout(resolve, READING_INTERVAL_MS));

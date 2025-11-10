@@ -58,7 +58,7 @@ export const DualGasCalibrationSection = ({
           )}
         </div>
         <CardDescription>
-          Simultaneous calibration | 30 readings over 4 minutes | Critical t-value: ±2.045
+          Simultaneous calibration | 30 readings over 3 minutes | Critical t-value: ±2.045
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -133,7 +133,7 @@ export const DualGasCalibrationSection = ({
         {hasResults && (
           <div className="grid grid-cols-2 gap-4">
             {/* CO2 Results */}
-            <div className="space-y-3 p-4 bg-muted rounded-lg">
+            <div className={`space-y-3 p-4 rounded-lg ${co2Data.passed ? 'bg-green-50 border-2 border-green-500' : 'bg-red-50 border-2 border-red-500'}`}>
               <div className="flex items-center gap-2 mb-2">
                 <Droplet className="w-4 h-4 text-blue-500" />
                 <h4 className="font-semibold">CO₂ Results</h4>
@@ -159,7 +159,7 @@ export const DualGasCalibrationSection = ({
             </div>
 
             {/* O2 Results */}
-            <div className="space-y-3 p-4 bg-muted rounded-lg">
+            <div className={`space-y-3 p-4 rounded-lg ${o2Data.passed ? 'bg-green-50 border-2 border-green-500' : 'bg-red-50 border-2 border-red-500'}`}>
               <div className="flex items-center gap-2 mb-2">
                 <Wind className="w-4 h-4 text-green-500" />
                 <h4 className="font-semibold">O₂ Results</h4>

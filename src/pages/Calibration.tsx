@@ -33,36 +33,15 @@ const Calibration = () => {
   const [co2O2ReadingsCollected, setCo2O2ReadingsCollected] = useState(0);
 
   const TOTAL_READINGS = 30;
-  const TOTAL_TIME_MS = 240000; // 4 minutes
+  const TOTAL_TIME_MS = 180000; // 3 minutes
 
   // Real-time sensor reading during CO calibration
   useEffect(() => {
     if (coCalibrationStep !== 'calibrating') {
-      setCoCaptureProgress(0);
-      setCoReadingsCollected(0);
       return;
     }
 
-    let progressInterval: NodeJS.Timeout;
     let readingInterval: NodeJS.Timeout;
-
-    const updateProgress = () => {
-      const interval = 100;
-      let elapsed = 0;
-
-      progressInterval = setInterval(() => {
-        elapsed += interval;
-        const progress = Math.min((elapsed / TOTAL_TIME_MS) * 100, 100);
-        setCoCaptureProgress(progress);
-        
-        const readingsEstimate = Math.floor((elapsed / TOTAL_TIME_MS) * TOTAL_READINGS);
-        setCoReadingsCollected(Math.min(readingsEstimate, TOTAL_READINGS));
-        
-        if (elapsed >= TOTAL_TIME_MS) {
-          clearInterval(progressInterval);
-        }
-      }, interval);
-    };
 
     const updateReadings = async () => {
       try {
@@ -73,12 +52,10 @@ const Calibration = () => {
       }
     };
 
-    updateProgress();
     updateReadings();
     readingInterval = setInterval(updateReadings, 1000);
 
     return () => {
-      clearInterval(progressInterval);
       clearInterval(readingInterval);
     };
   }, [coCalibrationStep, fetchSensorData]);
@@ -86,31 +63,10 @@ const Calibration = () => {
   // Real-time sensor reading during CO2/O2 calibration
   useEffect(() => {
     if (co2O2CalibrationStep !== 'calibrating') {
-      setCo2O2CaptureProgress(0);
-      setCo2O2ReadingsCollected(0);
       return;
     }
 
-    let progressInterval: NodeJS.Timeout;
     let readingInterval: NodeJS.Timeout;
-
-    const updateProgress = () => {
-      const interval = 100;
-      let elapsed = 0;
-
-      progressInterval = setInterval(() => {
-        elapsed += interval;
-        const progress = Math.min((elapsed / TOTAL_TIME_MS) * 100, 100);
-        setCo2O2CaptureProgress(progress);
-        
-        const readingsEstimate = Math.floor((elapsed / TOTAL_TIME_MS) * TOTAL_READINGS);
-        setCo2O2ReadingsCollected(Math.min(readingsEstimate, TOTAL_READINGS));
-        
-        if (elapsed >= TOTAL_TIME_MS) {
-          clearInterval(progressInterval);
-        }
-      }, interval);
-    };
 
     const updateReadings = async () => {
       try {
@@ -121,22 +77,36 @@ const Calibration = () => {
       }
     };
 
-    updateProgress();
     updateReadings();
     readingInterval = setInterval(updateReadings, 1000);
 
     return () => {
-      clearInterval(progressInterval);
       clearInterval(readingInterval);
     };
   }, [co2O2CalibrationStep, fetchSensorData]);
 
   const handleStartCoCalibration = async () => {
-    await startCoCalibration(parseFloat(coReference));
+    setCoReadingsCollected(0);
+    setCoCaptureProgress(0);
+    
+    await startCoCalibration(parseFloat(coReference), (collected, total) => {
+      setCoReadingsCollected(collected);
+      setCoCaptureProgress((collected / total) * 100);
+    });
   };
 
   const handleStartCo2O2Calibration = async () => {
-    await startCo2O2Calibration(parseFloat(co2Reference), parseFloat(o2Reference));
+    setCo2O2ReadingsCollected(0);
+    setCo2O2CaptureProgress(0);
+    
+    await startCo2O2Calibration(
+      parseFloat(co2Reference), 
+      parseFloat(o2Reference),
+      (collected, total) => {
+        setCo2O2ReadingsCollected(collected);
+        setCo2O2CaptureProgress((collected / total) * 100);
+      }
+    );
   };
 
   return (
@@ -168,7 +138,7 @@ const Calibration = () => {
                   <li>Allow sensors to warm up for at least 5 minutes before calibration</li>
                   <li>Prepare laboratory-verified reference gases</li>
                   <li>Ensure stable environmental conditions (temperature, humidity)</li>
-                  <li>Each calibration trial takes 4 minutes (30 readings)</li>
+                  <li>Each calibration trial takes 3 minutes (30 readings)</li>
                   <li>CO is calibrated independently; CO₂ and O₂ are calibrated together</li>
                 </ul>
                 <p className="text-sm text-amber-800 mt-3 font-medium">
@@ -183,7 +153,7 @@ const Calibration = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Calibration Process</AlertTitle>
           <AlertDescription>
-            Set reference values → Start calibration (4 min per section) → Review t-test results
+            Set reference values → Start calibration (3 min per section) → Review t-test results
           </AlertDescription>
         </Alert>
 

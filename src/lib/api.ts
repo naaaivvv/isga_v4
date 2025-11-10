@@ -21,11 +21,6 @@ export interface ScheduleConfig {
   active: number;
 }
 
-export interface CalibrationData {
-  CO?: { value: number; updated_at: string };
-  CO2?: { value: number; updated_at: string };
-  O2?: { value: number; updated_at: string };
-}
 
 // Fetch latest sensor data from MySQL
 export async function getSensorData(): Promise<SensorData> {
@@ -68,34 +63,6 @@ export async function saveSchedule(config: ScheduleConfig): Promise<void> {
   }
 }
 
-// Fetch calibration data from MySQL
-export async function getCalibration(): Promise<CalibrationData> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/get_calibration.php`);
-    if (!response.ok) throw new Error('Failed to fetch calibration');
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching calibration:', error);
-    throw error;
-  }
-}
-
-// Save calibration value to MySQL
-export async function saveCalibration(gasType: string, value: number): Promise<void> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/save_calibration.php`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ gas_type: gasType, value }),
-    });
-    if (!response.ok) throw new Error('Failed to save calibration');
-  } catch (error) {
-    console.error('Error saving calibration:', error);
-    throw error;
-  }
-}
 
 // Send manual control command to ESP32
 export async function sendESP32Command(device: 'fan' | 'compressor', state: boolean): Promise<void> {
@@ -112,14 +79,3 @@ export async function sendESP32Command(device: 'fan' | 'compressor', state: bool
   }
 }
 
-// Simulate reading CO sensor data (for calibration)
-export async function captureCoSensorData(): Promise<number> {
-  try {
-    // Get current sensor reading from database
-    const sensorData = await getSensorData();
-    return sensorData.co;
-  } catch (error) {
-    console.error('Error capturing CO sensor data:', error);
-    throw error;
-  }
-}

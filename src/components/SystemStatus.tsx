@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useUptime } from "@/contexts/UptimeContext";
+import { useCalibrationContext } from "@/contexts/CalibrationContext";
+import { CalibrationToggle } from "@/components/CalibrationToggle";
 import { 
   sendESP32Command, 
   saveSchedule as saveScheduleApi,
@@ -246,12 +248,17 @@ const SystemStatus = () => {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
+  const { isCalibrated } = useCalibrationContext();
+
   return (
     <div className="bg-card rounded-xl shadow-md p-6 mb-8">
-      <h2 className="text-xl font-semibold text-card-foreground mb-6 flex items-center gap-2">
-        <AlertCircle className="w-5 h-5 text-primary" />
-        System Status
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-primary" />
+          System Status
+        </h2>
+        {isCalibrated && <CalibrationToggle />}
+      </div>
 
       <div className="flex flex-wrap gap-3">
         {/* Connection Status */}

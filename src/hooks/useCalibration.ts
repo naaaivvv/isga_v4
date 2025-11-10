@@ -400,6 +400,56 @@ export const useCalibration = () => {
     }
   };
 
+  const fetchCalibrationData = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/get_unified_calibration.php`);
+      if (!response.ok) throw new Error('Failed to fetch calibration data');
+      
+      const data = await response.json();
+      
+      if (data.CO) {
+        setCoData({
+          reference_value: data.CO.reference_value || 0,
+          trial_readings: data.CO.trial_1_readings || [],
+          trial_avg: data.CO.trial_1_avg || 0,
+          t_value: data.CO.t_value,
+          passed: data.CO.passed === 1,
+          correction_slope: data.CO.correction_slope || 1,
+          correction_intercept: data.CO.correction_intercept || 0,
+        });
+      }
+      
+      if (data.CO2) {
+        setCo2Data({
+          reference_value: data.CO2.reference_value || 0,
+          trial_readings: data.CO2.trial_1_readings || [],
+          trial_avg: data.CO2.trial_1_avg || 0,
+          t_value: data.CO2.t_value,
+          passed: data.CO2.passed === 1,
+          correction_slope: data.CO2.correction_slope || 1,
+          correction_intercept: data.CO2.correction_intercept || 0,
+        });
+      }
+      
+      if (data.O2) {
+        setO2Data({
+          reference_value: data.O2.reference_value || 20.9,
+          trial_readings: data.O2.trial_1_readings || [],
+          trial_avg: data.O2.trial_1_avg || 0,
+          t_value: data.O2.t_value,
+          passed: data.O2.passed === 1,
+          correction_slope: data.O2.correction_slope || 1,
+          correction_intercept: data.O2.correction_intercept || 0,
+        });
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching calibration data:', error);
+      return null;
+    }
+  };
+
   const resetCalibration = () => {
     setCoData(createEmptyCalibrationData(0));
     setCo2Data(createEmptyCalibrationData(0));
@@ -423,5 +473,6 @@ export const useCalibration = () => {
     startCo2O2Calibration,
     resetCalibration,
     fetchSensorData,
+    fetchCalibrationData,
   };
 };

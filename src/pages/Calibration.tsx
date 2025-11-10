@@ -21,6 +21,7 @@ const Calibration = () => {
     startCo2O2Calibration,
     resetCalibration,
     fetchSensorData,
+    fetchCalibrationData,
   } = useCalibration();
 
   const { refreshCalibration } = useCalibrationContext();
@@ -28,6 +29,19 @@ const Calibration = () => {
   const [coReference, setCoReference] = useState("0");
   const [co2Reference, setCo2Reference] = useState("0");
   const [o2Reference, setO2Reference] = useState("20.9");
+
+  // Load existing calibration data on mount
+  useEffect(() => {
+    const loadCalibrationData = async () => {
+      const data = await fetchCalibrationData();
+      if (data) {
+        if (data.CO) setCoReference(String(data.CO.reference_value));
+        if (data.CO2) setCo2Reference(String(data.CO2.reference_value));
+        if (data.O2) setO2Reference(String(data.O2.reference_value));
+      }
+    };
+    loadCalibrationData();
+  }, []);
 
   const [currentReadings, setCurrentReadings] = useState({ co: 0, co2: 0, o2: 0 });
   const [coCaptureProgress, setCoCaptureProgress] = useState(0);

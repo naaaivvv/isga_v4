@@ -2,7 +2,6 @@ import { Link, useLocation } from "react-router-dom";
 import { Activity, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CalibrationToggle } from "./CalibrationToggle";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +26,6 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
-            <CalibrationToggle />
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -55,9 +53,6 @@ const Navbar = () => {
 
         {isOpen && (
           <div className="md:hidden py-4 space-y-2 border-t border-border">
-            <div className="mb-3 px-4">
-              <CalibrationToggle />
-            </div>
             {navLinks.map((link) => (
               <Link
                 key={link.path}

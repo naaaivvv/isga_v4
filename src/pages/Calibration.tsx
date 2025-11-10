@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SingleGasCalibrationSection } from "@/components/calibration/SingleGasCalibrationSection";
 import { DualGasCalibrationSection } from "@/components/calibration/DualGasCalibrationSection";
 import { useCalibration } from "@/hooks/useCalibration";
+import { useCalibrationContext } from "@/contexts/CalibrationContext";
 
 const Calibration = () => {
   const {
@@ -21,6 +22,8 @@ const Calibration = () => {
     resetCalibration,
     fetchSensorData,
   } = useCalibration();
+
+  const { refreshCalibration } = useCalibrationContext();
 
   const [coReference, setCoReference] = useState("0");
   const [co2Reference, setCo2Reference] = useState("0");
@@ -89,17 +92,22 @@ const Calibration = () => {
     setCoReadingsCollected(0);
     setCoCaptureProgress(0);
     
-    await startCoCalibration(parseFloat(coReference), (collected, total) => {
+    const result = await startCoCalibration(parseFloat(coReference), (collected, total) => {
       setCoReadingsCollected(collected);
       setCoCaptureProgress((collected / total) * 100);
     });
+    
+    // Refresh calibration factors after successful calibration
+    if (result.success) {
+      await refreshCalibration();
+    }
   };
 
   const handleStartCo2O2Calibration = async () => {
     setCo2O2ReadingsCollected(0);
     setCo2O2CaptureProgress(0);
     
-    await startCo2O2Calibration(
+    const result = await startCo2O2Calibration(
       parseFloat(co2Reference), 
       parseFloat(o2Reference),
       (collected, total) => {
@@ -107,6 +115,11 @@ const Calibration = () => {
         setCo2O2CaptureProgress((collected / total) * 100);
       }
     );
+    
+    // Refresh calibration factors after successful calibration
+    if (result.success) {
+      await refreshCalibration();
+    }
   };
 
   return (

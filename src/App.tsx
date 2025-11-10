@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UptimeProvider } from "./contexts/UptimeContext";
+import { CalibrationProvider } from "./contexts/CalibrationContext";
 import Index from "./pages/Index";
 import Scheduling from "./pages/Scheduling";
 import Manual from "./pages/Manual";
@@ -16,18 +17,20 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <UptimeProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/scheduling" element={<Scheduling />} />
-            <Route path="/manual" element={<Manual />} />
-            <Route path="/calibration" element={<Calibration />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <CalibrationProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/scheduling" element={<Scheduling />} />
+              <Route path="/manual" element={<Manual />} />
+              <Route path="/calibration" element={<Calibration />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CalibrationProvider>
       </UptimeProvider>
     </TooltipProvider>
   </QueryClientProvider>

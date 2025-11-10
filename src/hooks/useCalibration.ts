@@ -14,7 +14,7 @@ export interface GasCalibrationData {
 type CalibrationStep = 'idle' | 'calibrating' | 'computing' | 'complete';
 type GasType = 'CO' | 'CO2' | 'O2';
 
-const BACKEND_URL = 'http://192.168.1.9/isga_v4/php-backend';
+const BACKEND_URL = 'http://169.254.13.182/isga_v4/php-backend';
 const TOTAL_READINGS = 30;
 const READING_INTERVAL_MS = 6000; // 6 seconds between readings (180s total / 30 readings)
 const CRITICAL_T_VALUE = 2.045; // For n=30, df=29, α=0.05

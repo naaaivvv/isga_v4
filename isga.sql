@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Nov 10, 2025 at 01:59 PM
+-- Generation Time: Nov 10, 2025 at 03:46 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -30,8 +30,14 @@ SET time_zone = "+00:00";
 DROP TABLE IF EXISTS `calibration`;
 CREATE TABLE IF NOT EXISTS `calibration` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `gas_type` varchar(10) NOT NULL,
-  `calibrated_value` float NOT NULL,
+  `gas_type` enum('CO','CO2','O2') NOT NULL,
+  `reference_value` float NOT NULL COMMENT 'Laboratory reference value',
+  `readings` text COMMENT 'JSON array of 30 readings',
+  `average` float DEFAULT NULL COMMENT 'Average of 30 readings',
+  `t_value` float DEFAULT NULL COMMENT 'T-test result',
+  `passed` tinyint(1) DEFAULT '0' COMMENT '1 if |t_value| <= 2.045, 0 if failed',
+  `correction_slope` float DEFAULT '1',
+  `correction_intercept` float DEFAULT '0',
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_gas_type` (`gas_type`)
@@ -41,10 +47,10 @@ CREATE TABLE IF NOT EXISTS `calibration` (
 -- Dumping data for table `calibration`
 --
 
-INSERT INTO `calibration` (`id`, `gas_type`, `calibrated_value`, `updated_at`) VALUES
-(1, 'CO', 12, '2025-11-02 19:11:06'),
-(2, 'CO2', 400, '2025-11-03 05:06:01'),
-(3, 'O2', 20.9, '2025-11-03 05:06:09');
+INSERT INTO `calibration` (`id`, `gas_type`, `reference_value`, `readings`, `average`, `t_value`, `passed`, `correction_slope`, `correction_intercept`, `updated_at`) VALUES
+(1, 'CO', 0, NULL, NULL, NULL, 0, 1, 0, '2025-11-10 15:45:22'),
+(2, 'CO2', 0, NULL, NULL, NULL, 0, 1, 0, '2025-11-10 15:45:22'),
+(3, 'O2', 20.9, NULL, NULL, NULL, 0, 1, 0, '2025-11-10 15:45:22');
 
 -- --------------------------------------------------------
 
@@ -77,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `calibration_v2` (
 --
 
 INSERT INTO `calibration_v2` (`id`, `gas_type`, `reference_value`, `trial_1_readings`, `trial_2_readings`, `trial_3_readings`, `trial_1_avg`, `trial_2_avg`, `trial_3_avg`, `t_value`, `passed`, `correction_slope`, `correction_intercept`, `updated_at`) VALUES
-(1, 'CO', 50, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, '2025-11-07 20:12:52'),
+(1, 'CO', 500, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, '2025-11-10 14:59:10'),
 (2, 'CO2', 0.04, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, '2025-11-07 20:13:05'),
 (3, 'O2', 20.9, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, '2025-11-03 17:51:36');
 
@@ -95,14 +101,15 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `active` tinyint(1) NOT NULL DEFAULT '0',
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `schedule`
 --
 
 INSERT INTO `schedule` (`id`, `hours`, `minutes`, `active`, `updated_at`) VALUES
-(1, 0, 1, 0, '2025-11-03 07:34:44');
+(1, 0, 1, 0, '2025-11-03 07:34:44'),
+(2, 0, 30, 0, '2025-11-10 15:43:40');
 
 -- --------------------------------------------------------
 
@@ -122,7 +129,7 @@ CREATE TABLE IF NOT EXISTS `sensor` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=933 DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM AUTO_INCREMENT=956 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `sensor`
@@ -1052,7 +1059,30 @@ INSERT INTO `sensor` (`id`, `node_name`, `co`, `co2`, `o2`, `fan`, `compressor`,
 (929, 'node111', 49.5, 0.0448, 20.9, 0, 0, '2025-11-03 07:58:40', '2025-11-03 07:58:40'),
 (930, 'node111', 50.2, 0.0442, 20.9, 0, 0, '2025-11-03 07:58:40', '2025-11-03 07:58:40'),
 (931, 'node111', 52, 0.0444, 20.9, 0, 0, '2025-11-03 07:58:40', '2025-11-03 07:58:40'),
-(932, 'node111', 50.3, 0.045, 20.86, 0, 0, '2025-11-03 07:58:40', '2025-11-03 19:47:10');
+(932, 'node111', 505.3, 0.045, 20.86, 0, 0, '2025-11-03 07:58:40', '2025-11-10 14:01:48'),
+(933, 'node111', 501.12, 0.0421, 20.91, 0, 0, '2025-11-10 14:05:12', '2025-11-10 14:05:12'),
+(934, 'node111', 498.9, 0.0425, 20.89, 0, 0, '2025-11-10 14:05:35', '2025-11-10 14:05:35'),
+(935, 'node111', 500.5, 0.043, 20.9, 0, 0, '2025-11-10 14:07:11', '2025-11-10 14:07:11'),
+(936, 'node111', 502.3, 0.0428, 20.92, 0, 0, '2025-11-10 14:07:19', '2025-11-10 14:07:19'),
+(937, 'node111', 497.6, 0.0432, 20.88, 0, 0, '2025-11-10 14:07:35', '2025-11-10 14:07:35'),
+(938, 'node111', 501.8, 0.0435, 20.9, 0, 0, '2025-11-10 14:07:44', '2025-11-10 14:07:44'),
+(939, 'node111', 499.2, 0.044, 20.91, 0, 0, '2025-11-10 14:07:57', '2025-11-10 14:07:57'),
+(940, 'node111', 500, 0.0442, 20.89, 0, 0, '2025-11-10 14:08:14', '2025-11-10 14:08:14'),
+(941, 'node111', 503.1, 0.0438, 20.9, 0, 0, '2025-11-10 14:33:29', '2025-11-10 14:33:29'),
+(942, 'node111', 503.1, 0.0438, 20.9, 0, 0, '2025-11-10 14:34:09', '2025-11-10 14:34:09'),
+(943, 'node111', 498.5, 0.045, 20.88, 0, 0, '2025-11-10 14:34:22', '2025-11-10 14:34:22'),
+(944, 'node111', 498.9, 0.0425, 20.89, 0, 0, '2025-11-10 14:34:36', '2025-11-10 14:34:36'),
+(945, 'node111', 501.12, 0.0421, 20.91, 0, 0, '2025-11-10 14:34:50', '2025-11-10 14:34:50'),
+(946, 'node111', 497.6, 0.0432, 20.88, 0, 0, '2025-11-10 14:35:22', '2025-11-10 14:35:22'),
+(947, 'node111', 501.8, 0.0435, 20.9, 0, 0, '2025-11-10 14:35:33', '2025-11-10 14:35:33'),
+(948, 'node111', 502.3, 0.0428, 20.92, 0, 0, '2025-11-10 15:01:14', '2025-11-10 15:01:14'),
+(949, 'node111', 518, 0.0442, 20.89, 0, 0, '2025-11-10 15:01:36', '2025-11-10 15:01:36'),
+(950, 'node111', 498.5, 0.045, 20.88, 0, 0, '2025-11-10 15:01:52', '2025-11-10 15:01:52'),
+(951, 'node111', 510.5, 0.045, 20.88, 0, 0, '2025-11-10 15:02:07', '2025-11-10 15:02:07'),
+(952, 'node111', 513.6, 0.0432, 20.88, 0, 0, '2025-11-10 15:03:34', '2025-11-10 15:03:34'),
+(953, 'node111', 497.6, 0.0332, 20.76, 0, 0, '2025-11-10 15:05:05', '2025-11-10 15:05:05'),
+(954, 'node111', 497.6, 0.0643, 20.67, 0, 0, '2025-11-10 15:05:22', '2025-11-10 15:05:22'),
+(955, 'node111', 497.6, 0.0432, 20.72, 0, 0, '2025-11-10 15:05:57', '2025-11-10 15:05:57');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

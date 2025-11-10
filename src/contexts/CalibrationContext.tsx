@@ -19,7 +19,7 @@ interface CalibrationContextType {
 
 const CalibrationContext = createContext<CalibrationContextType | undefined>(undefined);
 
-const BACKEND_URL = 'http://192.168.1.9/isga_v4/php-backend';
+const BACKEND_URL = 'http://169.254.13.182/isga_v4/php-backend';
 
 export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [calibrationFactors, setCalibrationFactors] = useState<CalibrationFactors>({

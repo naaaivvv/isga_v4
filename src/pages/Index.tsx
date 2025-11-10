@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Activity, Droplet, Wind } from "lucide-react";
+import '../ChartColor.css';
 import Navbar from "@/components/Navbar";
 import SystemStatus from "@/components/SystemStatus";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,13 +26,13 @@ const Index = () => {
   // Calibration correction factors
   const [coCalibration, setCoCalibration] = useState<CalibrationData>({ correction_slope: 1, correction_intercept: 0, passed: 0 });
   const [co2Calibration, setCo2Calibration] = useState<CalibrationData>({ correction_slope: 1, correction_intercept: 0, passed: 0 });
-  const [o2Calibration, setO2Calibration] = useState<Calibisga_v3{ correction_slope: 1, correction_intercept: 0, passed: 0 });
+  const [o2Calibration, setO2Calibration] = useState<CalibrationData>({ correction_slope: 1, correction_intercept: 0, passed: 0 });
 
   // Load calibration data on mount
   useEffect(() => {
     const fetchCalibration = async () => {
       try {
-        const response = await fetch("http://192.168.1.10/chrono-state/php-backend/get_unified_calibration.php");
+        const response = await fetch("http://192.168.1.9/isga_v4/php-backend/get_unified_calibration.php");
         const data = await response.json();
         
         if (data.CO) {
@@ -60,13 +61,13 @@ const Index = () => {
       }
     };
     fetchCalibration();
-  }, []);isga_v3
+  }, []);
 
   // Fetch historical sensor data and apply calibration
   useEffect(() => {
     const fetchHistoricalData = async () => {
       try {
-        const response = await fetch("http://192.168.1.10/chrono-state/php-backend/get_sensor_history.php");
+        const response = await fetch("http://192.168.1.9/isga_v4/php-backend/get_sensor_history.php");
         const data: HistoricalData[] = await response.json();
 
         // Apply calibration to historical data

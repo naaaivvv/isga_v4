@@ -1,27 +1,23 @@
 import { useState, useEffect } from "react";
-import { Activity, Droplet, Wind, AlertCircle } from "lucide-react";
+import { Activity, AlertCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SystemStatus from "@/components/SystemStatus";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CalibrationReferenceInput } from "@/components/calibration/CalibrationReferenceInput";
-import { CalibrationProgress } from "@/components/calibration/CalibrationProgress";
-import { CalibrationTrialCard } from "@/components/calibration/CalibrationTrialCard";
-import { CalibrationResultCard } from "@/components/calibration/CalibrationResultCard";
+import { SingleGasCalibrationSection } from "@/components/calibration/SingleGasCalibrationSection";
+import { DualGasCalibrationSection } from "@/components/calibration/DualGasCalibrationSection";
 import { useCalibration } from "@/hooks/useCalibration";
-import { useToast } from "@/hooks/use-toast";
 
 const Calibration = () => {
-  const { toast } = useToast();
   const {
     coData,
     co2Data,
     o2Data,
-    calibrationStep,
-    unifiedTrials,
-    startTrial,
-    computeCalibration,
+    coCalibrationStep,
+    co2O2CalibrationStep,
+    startCoCalibration,
+    startCo2O2Calibration,
     resetCalibration,
     fetchSensorData,
   } = useCalibration();
@@ -29,13 +25,21 @@ const Calibration = () => {
   const [coReference, setCoReference] = useState("0");
   const [co2Reference, setCo2Reference] = useState("0");
   const [o2Reference, setO2Reference] = useState("20.9");
-  const [currentReadings, setCurrentReadings] = useState({ co: 0, co2: 0, o2: 0 });
-  const [captureProgress, setCaptureProgress] = useState(0);
-  const [readingsCollected, setReadingsCollected] = useState(0);
 
-  // Real-time sensor reading during calibration
+  const [currentReadings, setCurrentReadings] = useState({ co: 0, co2: 0, o2: 0 });
+  const [coCaptureProgress, setCoCaptureProgress] = useState(0);
+  const [co2O2CaptureProgress, setCo2O2CaptureProgress] = useState(0);
+  const [coReadingsCollected, setCoReadingsCollected] = useState(0);
+  const [co2O2ReadingsCollected, setCo2O2ReadingsCollected] = useState(0);
+
+  const TOTAL_READINGS = 30;
+  const TOTAL_TIME_MS = 240000; // 4 minutes
+
+  // Real-time sensor reading during CO calibration
   useEffect(() => {
-    if (calibrationStep === 'idle' || calibrationStep === 'computing' || calibrationStep === 'complete') {
+    if (coCalibrationStep !== 'calibrating') {
+      setCoCaptureProgress(0);
+      setCoReadingsCollected(0);
       return;
     }
 
@@ -43,16 +47,18 @@ const Calibration = () => {
     let readingInterval: NodeJS.Timeout;
 
     const updateProgress = () => {
-      const totalTime = 60000; // 60 seconds
       const interval = 100;
       let elapsed = 0;
 
       progressInterval = setInterval(() => {
         elapsed += interval;
-        const progress = Math.min((elapsed / totalTime) * 100, 100);
-        setCaptureProgress(progress);
+        const progress = Math.min((elapsed / TOTAL_TIME_MS) * 100, 100);
+        setCoCaptureProgress(progress);
         
-        if (elapsed >= totalTime) {
+        const readingsEstimate = Math.floor((elapsed / TOTAL_TIME_MS) * TOTAL_READINGS);
+        setCoReadingsCollected(Math.min(readingsEstimate, TOTAL_READINGS));
+        
+        if (elapsed >= TOTAL_TIME_MS) {
           clearInterval(progressInterval);
         }
       }, interval);
@@ -75,58 +81,63 @@ const Calibration = () => {
       clearInterval(progressInterval);
       clearInterval(readingInterval);
     };
-  }, [calibrationStep, fetchSensorData]);
+  }, [coCalibrationStep, fetchSensorData]);
 
-  const handleStartTrial = async (trialNumber: 1 | 2 | 3) => {
-    setCaptureProgress(0);
-    setReadingsCollected(0);
-
-    const result = await startTrial(
-      trialNumber,
-      parseFloat(coReference),
-      parseFloat(co2Reference),
-      parseFloat(o2Reference)
-    );
-
-    if (result.success && trialNumber === 3 && unifiedTrials.length === 2) {
-      // All 3 trials complete, compute results
-      setTimeout(() => {
-        handleComputeCalibration();
-      }, 500);
-    }
-  };
-
-  const handleComputeCalibration = async () => {
-    await computeCalibration(
-      parseFloat(coReference),
-      parseFloat(co2Reference),
-      parseFloat(o2Reference)
-    );
-  };
-
-  const handleSaveReferences = () => {
-    const coVal = parseFloat(coReference);
-    const co2Val = parseFloat(co2Reference);
-    const o2Val = parseFloat(o2Reference);
-
-    if (isNaN(coVal) || isNaN(co2Val) || isNaN(o2Val)) {
-      toast({
-        title: "Invalid Values",
-        description: "Please enter valid reference values for all gases",
-        variant: "destructive",
-      });
+  // Real-time sensor reading during CO2/O2 calibration
+  useEffect(() => {
+    if (co2O2CalibrationStep !== 'calibrating') {
+      setCo2O2CaptureProgress(0);
+      setCo2O2ReadingsCollected(0);
       return;
     }
 
-    toast({
-      title: "Reference Values Set",
-      description: `CO: ${coVal} ppm | CO₂: ${co2Val}% | O₂: ${o2Val}%`,
-    });
+    let progressInterval: NodeJS.Timeout;
+    let readingInterval: NodeJS.Timeout;
+
+    const updateProgress = () => {
+      const interval = 100;
+      let elapsed = 0;
+
+      progressInterval = setInterval(() => {
+        elapsed += interval;
+        const progress = Math.min((elapsed / TOTAL_TIME_MS) * 100, 100);
+        setCo2O2CaptureProgress(progress);
+        
+        const readingsEstimate = Math.floor((elapsed / TOTAL_TIME_MS) * TOTAL_READINGS);
+        setCo2O2ReadingsCollected(Math.min(readingsEstimate, TOTAL_READINGS));
+        
+        if (elapsed >= TOTAL_TIME_MS) {
+          clearInterval(progressInterval);
+        }
+      }, interval);
+    };
+
+    const updateReadings = async () => {
+      try {
+        const data = await fetchSensorData();
+        setCurrentReadings(data);
+      } catch (error) {
+        console.error('Error fetching sensor data:', error);
+      }
+    };
+
+    updateProgress();
+    updateReadings();
+    readingInterval = setInterval(updateReadings, 1000);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(readingInterval);
+    };
+  }, [co2O2CalibrationStep, fetchSensorData]);
+
+  const handleStartCoCalibration = async () => {
+    await startCoCalibration(parseFloat(coReference));
   };
 
-  const isCalibrating = ['trial1', 'trial2', 'trial3', 'computing'].includes(calibrationStep);
-  const allTrialsComplete = unifiedTrials.length === 3;
-  const hasResults = coData.passed !== null && co2Data.passed !== null && o2Data.passed !== null;
+  const handleStartCo2O2Calibration = async () => {
+    await startCo2O2Calibration(parseFloat(co2Reference), parseFloat(o2Reference));
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,7 +146,7 @@ const Calibration = () => {
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Sensor Calibration</h1>
           <p className="text-muted-foreground">
-            Statistical calibration with 3 trials for CO, CO₂, and O₂ sensors
+            Independent calibration for CO, CO₂, and O₂ sensors with statistical validation
           </p>
         </header>
 
@@ -155,13 +166,13 @@ const Calibration = () => {
                   <li>Ensure ESP32 is connected and powered on</li>
                   <li>Verify all sensors (CO, CO₂, O₂) are properly connected</li>
                   <li>Allow sensors to warm up for at least 5 minutes before calibration</li>
-                  <li>Prepare laboratory-verified</li>
+                  <li>Prepare laboratory-verified reference gases</li>
                   <li>Ensure stable environmental conditions (temperature, humidity)</li>
-                  <li>Have calibration equipment and tools ready</li>
-                  <li>Each trial will take 60 seconds to collect 10 readings</li>
+                  <li>Each calibration trial takes 4 minutes (30 readings)</li>
+                  <li>CO is calibrated independently; CO₂ and O₂ are calibrated together</li>
                 </ul>
                 <p className="text-sm text-amber-800 mt-3 font-medium">
-                  ⚠️ Do not interrupt the calibration process once started. Each trial must complete all readings for accurate results.
+                  ⚠️ Do not interrupt the calibration process once started. Statistical validation requires |t-value| ≤ 2.045 to pass.
                 </p>
               </div>
             </div>
@@ -172,109 +183,50 @@ const Calibration = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Calibration Process</AlertTitle>
           <AlertDescription>
-            Set reference values → Complete 3 unified trials → Review statistical validation results
+            Set reference values → Start calibration (4 min per section) → Review t-test results
           </AlertDescription>
         </Alert>
 
         <div className="space-y-6">
-          {/* Step 1: Reference Values */}
-          <CalibrationReferenceInput
-            coReference={coReference}
-            co2Reference={co2Reference}
-            o2Reference={o2Reference}
-            onCoReferenceChange={setCoReference}
-            onCo2ReferenceChange={setCo2Reference}
-            onO2ReferenceChange={setO2Reference}
-            onSave={handleSaveReferences}
-            disabled={isCalibrating}
+          {/* CO Calibration Section */}
+          <SingleGasCalibrationSection
+            gasName="CO"
+            gasUnit="ppm"
+            icon={<Activity className="w-5 h-5 text-red-500" />}
+            referenceValue={coReference}
+            onReferenceChange={setCoReference}
+            calibrationData={coData}
+            calibrationStep={coCalibrationStep}
+            onStartCalibration={handleStartCoCalibration}
+            currentReading={currentReadings.co}
+            captureProgress={coCaptureProgress}
+            readingsCollected={coReadingsCollected}
+            totalReadings={TOTAL_READINGS}
           />
 
-          {/* Step 2: Trials */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Step 2: Conduct Unified Trials</CardTitle>
-              <CardDescription>
-                Each trial captures CO, CO₂, and O₂ simultaneously (10 readings over 60 seconds)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isCalibrating && (
-                <CalibrationProgress
-                  currentReadings={currentReadings}
-                  captureProgress={captureProgress}
-                  readingsCollected={readingsCollected}
-                  totalReadings={10}
-                />
-              )}
-
-              <div className="grid gap-4 md:grid-cols-3">
-                {[1, 2, 3].map((trialNum) => (
-                  <CalibrationTrialCard
-                    key={trialNum}
-                    trialNumber={trialNum as 1 | 2 | 3}
-                    trialData={unifiedTrials[trialNum - 1]}
-                    onStart={() => handleStartTrial(trialNum as 1 | 2 | 3)}
-                    disabled={
-                      isCalibrating ||
-                      (trialNum > 1 && unifiedTrials.length < trialNum - 1)
-                    }
-                    isActive={calibrationStep === `trial${trialNum}`}
-                  />
-                ))}
-              </div>
-
-              {allTrialsComplete && !hasResults && calibrationStep === 'idle' && (
-                <Button
-                  onClick={handleComputeCalibration}
-                  className="w-full"
-                  size="lg"
-                >
-                  Compute Calibration Results
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Step 3: Results */}
-          {hasResults && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Step 3: Calibration Results</CardTitle>
-                <CardDescription>
-                  Statistical validation using t-test (critical value ±4.303, df=2, α=0.05)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <CalibrationResultCard
-                    gasName="Carbon Monoxide (CO)"
-                    gasType="CO"
-                    icon={<Activity className="w-5 h-5 text-red-500" />}
-                    data={coData}
-                  />
-                  <CalibrationResultCard
-                    gasName="Carbon Dioxide (CO₂)"
-                    gasType="CO2"
-                    icon={<Droplet className="w-5 h-5 text-blue-500" />}
-                    data={co2Data}
-                  />
-                  <CalibrationResultCard
-                    gasName="Oxygen (O₂)"
-                    gasType="O2"
-                    icon={<Wind className="w-5 h-5 text-green-500" />}
-                    data={o2Data}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* CO2 & O2 Calibration Section */}
+          <DualGasCalibrationSection
+            co2Reference={co2Reference}
+            o2Reference={o2Reference}
+            onCo2ReferenceChange={setCo2Reference}
+            onO2ReferenceChange={setO2Reference}
+            co2Data={co2Data}
+            o2Data={o2Data}
+            calibrationStep={co2O2CalibrationStep}
+            onStartCalibration={handleStartCo2O2Calibration}
+            currentCo2Reading={currentReadings.co2}
+            currentO2Reading={currentReadings.o2}
+            captureProgress={co2O2CaptureProgress}
+            readingsCollected={co2O2ReadingsCollected}
+            totalReadings={TOTAL_READINGS}
+          />
 
           {/* Reset Button */}
           <div className="flex justify-end">
             <Button
               onClick={resetCalibration}
               variant="outline"
-              disabled={isCalibrating}
+              disabled={coCalibrationStep !== 'idle' || co2O2CalibrationStep !== 'idle'}
             >
               Reset All Calibration
             </Button>

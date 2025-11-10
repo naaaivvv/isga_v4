@@ -3,40 +3,26 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface GasCalibrationData {
   reference_value: number;
-  trial_1_readings: number[];
-  trial_2_readings: number[];
-  trial_3_readings: number[];
-  trial_1_avg: number;
-  trial_2_avg: number;
-  trial_3_avg: number;
+  trial_readings: number[];
+  trial_avg: number;
   t_value: number | null;
   passed: boolean | null;
   correction_slope: number;
   correction_intercept: number;
 }
 
-export interface UnifiedTrialData {
-  co_readings: number[];
-  co2_readings: number[];
-  o2_readings: number[];
-  co_avg: number;
-  co2_avg: number;
-  o2_avg: number;
-}
-
-type CalibrationStep = 'idle' | 'trial1' | 'trial2' | 'trial3' | 'computing' | 'complete';
+type CalibrationStep = 'idle' | 'calibrating' | 'computing' | 'complete';
 type GasType = 'CO' | 'CO2' | 'O2';
 
 const BACKEND_URL = 'http://192.168.1.9/isga_v4/php-backend';
+const TOTAL_READINGS = 30;
+const READING_INTERVAL_MS = 8000; // 8 seconds between readings (240s total / 30 readings)
+const CRITICAL_T_VALUE = 2.045; // For n=30, df=29, α=0.05
 
 const createEmptyCalibrationData = (defaultRef = 0): GasCalibrationData => ({
   reference_value: defaultRef,
-  trial_1_readings: [],
-  trial_2_readings: [],
-  trial_3_readings: [],
-  trial_1_avg: 0,
-  trial_2_avg: 0,
-  trial_3_avg: 0,
+  trial_readings: [],
+  trial_avg: 0,
   t_value: null,
   passed: null,
   correction_slope: 1,
@@ -50,8 +36,8 @@ export const useCalibration = () => {
   const [co2Data, setCo2Data] = useState<GasCalibrationData>(createEmptyCalibrationData(0));
   const [o2Data, setO2Data] = useState<GasCalibrationData>(createEmptyCalibrationData(20.9));
 
-  const [calibrationStep, setCalibrationStep] = useState<CalibrationStep>('idle');
-  const [unifiedTrials, setUnifiedTrials] = useState<UnifiedTrialData[]>([]);
+  const [coCalibrationStep, setCoCalibrationStep] = useState<CalibrationStep>('idle');
+  const [co2O2CalibrationStep, setCo2O2CalibrationStep] = useState<CalibrationStep>('idle');
 
   const fetchSensorData = async () => {
     const response = await fetch(`${BACKEND_URL}/get_sensor_data.php`);
@@ -63,215 +49,343 @@ export const useCalibration = () => {
     };
   };
 
-  const startTrial = async (
-    trialNumber: 1 | 2 | 3,
-    coReference: number,
-    co2Reference: number,
-    o2Reference: number
-  ) => {
-    if (isNaN(coReference) || isNaN(co2Reference) || isNaN(o2Reference)) {
+  const startCoCalibration = async (coReference: number) => {
+    if (isNaN(coReference)) {
       toast({
-        title: "Reference Values Required",
-        description: "Please set all reference values before starting calibration",
+        title: "Reference Value Required",
+        description: "Please set CO reference value before starting calibration",
         variant: "destructive",
       });
-      return { success: false, trialData: null };
+      return { success: false };
     }
 
-    const stepMap = { 1: 'trial1', 2: 'trial2', 3: 'trial3' } as const;
-    setCalibrationStep(stepMap[trialNumber]);
+    setCoCalibrationStep('calibrating');
 
     toast({
-      title: `Unified Trial ${trialNumber} Started`,
-      description: `Capturing all sensors simultaneously - 10 readings over 60 seconds...`,
+      title: "CO Calibration Started",
+      description: `Capturing 30 readings over 4 minutes...`,
     });
 
     try {
       const coReadings: number[] = [];
-      const co2Readings: number[] = [];
-      const o2Readings: number[] = [];
-      const totalReadings = 10;
-      const intervalMs = 6000;
 
-      for (let i = 0; i < totalReadings; i++) {
+      for (let i = 0; i < TOTAL_READINGS; i++) {
         const sensorData = await fetchSensorData();
-        coReadings.push(sensorData.co);
-        co2Readings.push(sensorData.co2);
-        o2Readings.push(sensorData.o2);
+        const coValue = Math.min(sensorData.co, 2000); // Cap at 2000 ppm
+        coReadings.push(coValue);
 
-        if (i < totalReadings - 1) {
-          await new Promise(resolve => setTimeout(resolve, intervalMs));
+        if (i < TOTAL_READINGS - 1) {
+          await new Promise(resolve => setTimeout(resolve, READING_INTERVAL_MS));
         }
       }
 
-      if (coReadings.length === 0 || co2Readings.length === 0 || o2Readings.length === 0) {
+      if (coReadings.length === 0) {
         throw new Error("No sensor readings captured");
       }
 
       const coAvg = coReadings.reduce((a, b) => a + b, 0) / coReadings.length;
-      const co2Avg = co2Readings.reduce((a, b) => a + b, 0) / co2Readings.length;
-      const o2Avg = o2Readings.reduce((a, b) => a + b, 0) / o2Readings.length;
 
-      const trialData: UnifiedTrialData = {
-        co_readings: coReadings,
-        co2_readings: co2Readings,
-        o2_readings: o2Readings,
-        co_avg: coAvg,
-        co2_avg: co2Avg,
-        o2_avg: o2Avg,
-      };
-
-      // Update unified trials
-      setUnifiedTrials(prev => {
-        const newTrials = [...prev];
-        newTrials[trialNumber - 1] = trialData;
-        return newTrials;
-      });
-
-      // Update individual gas data
-      const updateGasData = (
-        setter: React.Dispatch<React.SetStateAction<GasCalibrationData>>,
-        readings: number[],
-        avg: number
-      ) => {
-        setter(prev => {
-          const updated = { ...prev };
-          if (trialNumber === 1) {
-            updated.trial_1_readings = readings;
-            updated.trial_1_avg = avg;
-          } else if (trialNumber === 2) {
-            updated.trial_2_readings = readings;
-            updated.trial_2_avg = avg;
-          } else {
-            updated.trial_3_readings = readings;
-            updated.trial_3_avg = avg;
-          }
-          return updated;
-        });
-      };
-
-      updateGasData(setCoData, coReadings, coAvg);
-      updateGasData(setCo2Data, co2Readings, co2Avg);
-      updateGasData(setO2Data, o2Readings, o2Avg);
+      setCoData(prev => ({
+        ...prev,
+        reference_value: coReference,
+        trial_readings: coReadings,
+        trial_avg: coAvg,
+      }));
 
       toast({
-        title: `Trial ${trialNumber} Complete`,
-        description: `CO: ${coAvg.toFixed(2)} ppm | CO₂: ${co2Avg.toFixed(2)}% | O₂: ${o2Avg.toFixed(2)}%`,
+        title: "CO Calibration Complete",
+        description: `Average: ${coAvg.toFixed(2)} ppm from ${coReadings.length} readings`,
       });
 
-      setCalibrationStep('idle');
+      setCoCalibrationStep('idle');
 
-      return { success: true, trialData };
-    } catch (error) {
-      console.error('Error during calibration:', error);
-      toast({
-        title: "Calibration Failed",
-        description: "Failed to capture sensor data.",
-        variant: "destructive",
-      });
-      setCalibrationStep('idle');
-      return { success: false, trialData: null };
-    }
-  };
-
-  const computeCalibration = async (
-    coReference: number,
-    co2Reference: number,
-    o2Reference: number
-  ) => {
-    setCalibrationStep('computing');
-
-    try {
-      const saveGasCalibration = async (
-        gasType: GasType,
-        data: GasCalibrationData,
-        referenceValue: number
-      ) => {
-        const trialAverages = [data.trial_1_avg, data.trial_2_avg, data.trial_3_avg];
-        const n = trialAverages.length;
-        const sampleMean = trialAverages.reduce((a, b) => a + b, 0) / n;
-        const sampleVariance = trialAverages.reduce((sum, x) => sum + Math.pow(x - sampleMean, 2), 0) / (n - 1);
-        const sampleStdDev = Math.sqrt(sampleVariance);
-        const standardError = sampleStdDev / Math.sqrt(n);
-        
-        const tValue = standardError !== 0 ? (sampleMean - referenceValue) / standardError : 0;
-        const criticalValue = 4.303;
-        const passed = Math.abs(tValue) <= criticalValue;
-
-        const correctionSlope = sampleMean !== 0 ? referenceValue / sampleMean : 1;
-        const correctionIntercept = 0;
-
-        // Ensure proper datatypes for database
-        const payload = {
-          gas_type: gasType,
-          reference_value: Number(referenceValue),
-          trial_1_readings: data.trial_1_readings,
-          trial_2_readings: data.trial_2_readings,
-          trial_3_readings: data.trial_3_readings,
-          trial_1_avg: Number(data.trial_1_avg),
-          trial_2_avg: Number(data.trial_2_avg),
-          trial_3_avg: Number(data.trial_3_avg),
-          t_value: Number(tValue),
-          passed: passed ? 1 : 0, // TINYINT(1) expects 1 or 0
-          correction_slope: Number(correctionSlope),
-          correction_intercept: Number(correctionIntercept),
-        };
-
-        const response = await fetch(`${BACKEND_URL}/save_unified_calibration.php`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Failed to save ${gasType} calibration:`, errorText);
-          throw new Error(`Failed to save ${gasType} calibration`);
-        }
-
-        const result = await response.json();
-        console.log(`${gasType} calibration saved:`, result);
-
-        return {
-          ...data,
-          reference_value: referenceValue,
-          t_value: tValue,
-          passed: passed,
-          correction_slope: correctionSlope,
-          correction_intercept: correctionIntercept,
-        };
-      };
-
-      const [updatedCoData, updatedCo2Data, updatedO2Data] = await Promise.all([
-        saveGasCalibration('CO', coData, coReference),
-        saveGasCalibration('CO2', co2Data, co2Reference),
-        saveGasCalibration('O2', o2Data, o2Reference),
-      ]);
-
-      setCoData(updatedCoData);
-      setCo2Data(updatedCo2Data);
-      setO2Data(updatedO2Data);
-
-      const allPassed = updatedCoData.passed && updatedCo2Data.passed && updatedO2Data.passed;
-      
-      toast({
-        title: allPassed ? "All Calibrations Passed ✓" : "Calibration Results",
-        description: `CO: ${updatedCoData.passed ? '✓' : '✗'} | CO₂: ${updatedCo2Data.passed ? '✓' : '✗'} | O₂: ${updatedO2Data.passed ? '✓' : '✗'}`,
-        variant: allPassed ? "default" : "destructive",
-      });
-
-      setCalibrationStep('complete');
-      setTimeout(() => setCalibrationStep('idle'), 3000);
+      // Auto-compute results
+      setTimeout(() => {
+        computeCoCalibration(coReference, coReadings, coAvg);
+      }, 500);
 
       return { success: true };
     } catch (error) {
-      console.error('Error computing calibration:', error);
+      console.error('Error during CO calibration:', error);
       toast({
-        title: "Computation Error",
-        description: "Failed to compute calibration results",
+        title: "Calibration Failed",
+        description: "Failed to capture CO sensor data.",
         variant: "destructive",
       });
-      setCalibrationStep('idle');
+      setCoCalibrationStep('idle');
+      return { success: false };
+    }
+  };
+
+  const startCo2O2Calibration = async (co2Reference: number, o2Reference: number) => {
+    if (isNaN(co2Reference) || isNaN(o2Reference)) {
+      toast({
+        title: "Reference Values Required",
+        description: "Please set CO2 and O2 reference values before starting calibration",
+        variant: "destructive",
+      });
+      return { success: false };
+    }
+
+    setCo2O2CalibrationStep('calibrating');
+
+    toast({
+      title: "CO2 & O2 Calibration Started",
+      description: `Capturing 30 readings over 4 minutes...`,
+    });
+
+    try {
+      const co2Readings: number[] = [];
+      const o2Readings: number[] = [];
+
+      for (let i = 0; i < TOTAL_READINGS; i++) {
+        const sensorData = await fetchSensorData();
+        co2Readings.push(sensorData.co2);
+        o2Readings.push(sensorData.o2);
+
+        if (i < TOTAL_READINGS - 1) {
+          await new Promise(resolve => setTimeout(resolve, READING_INTERVAL_MS));
+        }
+      }
+
+      if (co2Readings.length === 0 || o2Readings.length === 0) {
+        throw new Error("No sensor readings captured");
+      }
+
+      const co2Avg = co2Readings.reduce((a, b) => a + b, 0) / co2Readings.length;
+      const o2Avg = o2Readings.reduce((a, b) => a + b, 0) / o2Readings.length;
+
+      setCo2Data(prev => ({
+        ...prev,
+        reference_value: co2Reference,
+        trial_readings: co2Readings,
+        trial_avg: co2Avg,
+      }));
+
+      setO2Data(prev => ({
+        ...prev,
+        reference_value: o2Reference,
+        trial_readings: o2Readings,
+        trial_avg: o2Avg,
+      }));
+
+      toast({
+        title: "CO2 & O2 Calibration Complete",
+        description: `CO2: ${co2Avg.toFixed(2)}% | O2: ${o2Avg.toFixed(2)}%`,
+      });
+
+      setCo2O2CalibrationStep('idle');
+
+      // Auto-compute results
+      setTimeout(() => {
+        computeCo2O2Calibration(co2Reference, co2Readings, co2Avg, o2Reference, o2Readings, o2Avg);
+      }, 500);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error during CO2/O2 calibration:', error);
+      toast({
+        title: "Calibration Failed",
+        description: "Failed to capture CO2/O2 sensor data.",
+        variant: "destructive",
+      });
+      setCo2O2CalibrationStep('idle');
+      return { success: false };
+    }
+  };
+
+  const computeCoCalibration = async (
+    referenceValue: number,
+    readings: number[],
+    sampleMean: number
+  ) => {
+    setCoCalibrationStep('computing');
+
+    try {
+      const n = readings.length;
+      const sampleVariance = readings.reduce((sum, x) => sum + Math.pow(x - sampleMean, 2), 0) / (n - 1);
+      const sampleStdDev = Math.sqrt(sampleVariance);
+      const standardError = sampleStdDev / Math.sqrt(n);
+      
+      const tValue = standardError !== 0 ? (sampleMean - referenceValue) / standardError : 0;
+      const passed = Math.abs(tValue) <= CRITICAL_T_VALUE;
+
+      const correctionSlope = sampleMean !== 0 ? referenceValue / sampleMean : 1;
+      const correctionIntercept = 0;
+
+      const payload = {
+        gas_type: 'CO',
+        reference_value: Number(referenceValue),
+        trial_1_readings: readings,
+        trial_2_readings: [],
+        trial_3_readings: [],
+        trial_1_avg: Number(sampleMean),
+        trial_2_avg: null,
+        trial_3_avg: null,
+        t_value: Number(tValue),
+        passed: passed ? 1 : 0,
+        correction_slope: Number(correctionSlope),
+        correction_intercept: Number(correctionIntercept),
+      };
+
+      const response = await fetch(`${BACKEND_URL}/save_unified_calibration.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to save CO calibration:', errorText);
+        throw new Error('Failed to save CO calibration');
+      }
+
+      const updatedData: GasCalibrationData = {
+        reference_value: referenceValue,
+        trial_readings: readings,
+        trial_avg: sampleMean,
+        t_value: tValue,
+        passed: passed,
+        correction_slope: correctionSlope,
+        correction_intercept: correctionIntercept,
+      };
+
+      setCoData(updatedData);
+
+      toast({
+        title: passed ? "CO Calibration Passed ✓" : "CO Calibration Failed ✗",
+        description: `t-value: ${tValue.toFixed(3)} (must be between -2.045 and 2.045)`,
+        variant: passed ? "default" : "destructive",
+      });
+
+      setCoCalibrationStep('complete');
+      setTimeout(() => setCoCalibrationStep('idle'), 3000);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error computing CO calibration:', error);
+      toast({
+        title: "Computation Error",
+        description: "Failed to compute CO calibration results",
+        variant: "destructive",
+      });
+      setCoCalibrationStep('idle');
+      return { success: false };
+    }
+  };
+
+  const computeCo2O2Calibration = async (
+    co2Reference: number,
+    co2Readings: number[],
+    co2Mean: number,
+    o2Reference: number,
+    o2Readings: number[],
+    o2Mean: number
+  ) => {
+    setCo2O2CalibrationStep('computing');
+
+    try {
+      // CO2 computation
+      const co2N = co2Readings.length;
+      const co2Variance = co2Readings.reduce((sum, x) => sum + Math.pow(x - co2Mean, 2), 0) / (co2N - 1);
+      const co2StdDev = Math.sqrt(co2Variance);
+      const co2SE = co2StdDev / Math.sqrt(co2N);
+      const co2TValue = co2SE !== 0 ? (co2Mean - co2Reference) / co2SE : 0;
+      const co2Passed = Math.abs(co2TValue) <= CRITICAL_T_VALUE;
+      const co2Slope = co2Mean !== 0 ? co2Reference / co2Mean : 1;
+
+      // O2 computation
+      const o2N = o2Readings.length;
+      const o2Variance = o2Readings.reduce((sum, x) => sum + Math.pow(x - o2Mean, 2), 0) / (o2N - 1);
+      const o2StdDev = Math.sqrt(o2Variance);
+      const o2SE = o2StdDev / Math.sqrt(o2N);
+      const o2TValue = o2SE !== 0 ? (o2Mean - o2Reference) / o2SE : 0;
+      const o2Passed = Math.abs(o2TValue) <= CRITICAL_T_VALUE;
+      const o2Slope = o2Mean !== 0 ? o2Reference / o2Mean : 1;
+
+      // Save CO2
+      const co2Payload = {
+        gas_type: 'CO2',
+        reference_value: Number(co2Reference),
+        trial_1_readings: co2Readings,
+        trial_2_readings: [],
+        trial_3_readings: [],
+        trial_1_avg: Number(co2Mean),
+        trial_2_avg: null,
+        trial_3_avg: null,
+        t_value: Number(co2TValue),
+        passed: co2Passed ? 1 : 0,
+        correction_slope: Number(co2Slope),
+        correction_intercept: 0,
+      };
+
+      // Save O2
+      const o2Payload = {
+        gas_type: 'O2',
+        reference_value: Number(o2Reference),
+        trial_1_readings: o2Readings,
+        trial_2_readings: [],
+        trial_3_readings: [],
+        trial_1_avg: Number(o2Mean),
+        trial_2_avg: null,
+        trial_3_avg: null,
+        t_value: Number(o2TValue),
+        passed: o2Passed ? 1 : 0,
+        correction_slope: Number(o2Slope),
+        correction_intercept: 0,
+      };
+
+      await Promise.all([
+        fetch(`${BACKEND_URL}/save_unified_calibration.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(co2Payload),
+        }),
+        fetch(`${BACKEND_URL}/save_unified_calibration.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(o2Payload),
+        }),
+      ]);
+
+      setCo2Data({
+        reference_value: co2Reference,
+        trial_readings: co2Readings,
+        trial_avg: co2Mean,
+        t_value: co2TValue,
+        passed: co2Passed,
+        correction_slope: co2Slope,
+        correction_intercept: 0,
+      });
+
+      setO2Data({
+        reference_value: o2Reference,
+        trial_readings: o2Readings,
+        trial_avg: o2Mean,
+        t_value: o2TValue,
+        passed: o2Passed,
+        correction_slope: o2Slope,
+        correction_intercept: 0,
+      });
+
+      toast({
+        title: co2Passed && o2Passed ? "CO2 & O2 Calibration Passed ✓" : "Calibration Results",
+        description: `CO2: ${co2Passed ? '✓' : '✗'} | O2: ${o2Passed ? '✓' : '✗'}`,
+        variant: co2Passed && o2Passed ? "default" : "destructive",
+      });
+
+      setCo2O2CalibrationStep('complete');
+      setTimeout(() => setCo2O2CalibrationStep('idle'), 3000);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error computing CO2/O2 calibration:', error);
+      toast({
+        title: "Computation Error",
+        description: "Failed to compute CO2/O2 calibration results",
+        variant: "destructive",
+      });
+      setCo2O2CalibrationStep('idle');
       return { success: false };
     }
   };
@@ -280,12 +394,12 @@ export const useCalibration = () => {
     setCoData(createEmptyCalibrationData(0));
     setCo2Data(createEmptyCalibrationData(0));
     setO2Data(createEmptyCalibrationData(20.9));
-    setUnifiedTrials([]);
-    setCalibrationStep('idle');
+    setCoCalibrationStep('idle');
+    setCo2O2CalibrationStep('idle');
 
     toast({
       title: "Calibration Reset",
-      description: "All calibration data cleared for all gases",
+      description: "All calibration data cleared",
     });
   };
 
@@ -293,10 +407,10 @@ export const useCalibration = () => {
     coData,
     co2Data,
     o2Data,
-    calibrationStep,
-    unifiedTrials,
-    startTrial,
-    computeCalibration,
+    coCalibrationStep,
+    co2O2CalibrationStep,
+    startCoCalibration,
+    startCo2O2Calibration,
     resetCalibration,
     fetchSensorData,
   };

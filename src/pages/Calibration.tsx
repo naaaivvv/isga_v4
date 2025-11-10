@@ -20,7 +20,7 @@ const Calibration = () => {
     startCoCalibration,
     startCo2O2Calibration,
     resetCalibration,
-    fetchSensorData,
+    // fetchSensorData, // No longer needed here
     fetchCalibrationData,
   } = useCalibration();
 
@@ -41,6 +41,7 @@ const Calibration = () => {
       }
     };
     loadCalibrationData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [currentReadings, setCurrentReadings] = useState({ co: 0, co2: 0, o2: 0 });
@@ -50,66 +51,26 @@ const Calibration = () => {
   const [co2O2ReadingsCollected, setCo2O2ReadingsCollected] = useState(0);
 
   const TOTAL_READINGS = 30;
-  const TOTAL_TIME_MS = 180000; // 3 minutes
+  // const TOTAL_TIME_MS = 180000; // 3 minutes // No longer needed
 
-  // Real-time sensor reading during CO calibration
-  useEffect(() => {
-    if (coCalibrationStep !== 'calibrating') {
-      return;
-    }
+  // REMOVED: The conflicting useEffect hook for CO calibration
 
-    let readingInterval: NodeJS.Timeout;
-
-    const updateReadings = async () => {
-      try {
-        const data = await fetchSensorData();
-        setCurrentReadings(data);
-      } catch (error) {
-        console.error('Error fetching sensor data:', error);
-      }
-    };
-
-    updateReadings();
-    readingInterval = setInterval(updateReadings, 1000);
-
-    return () => {
-      clearInterval(readingInterval);
-    };
-  }, [coCalibrationStep, fetchSensorData]);
-
-  // Real-time sensor reading during CO2/O2 calibration
-  useEffect(() => {
-    if (co2O2CalibrationStep !== 'calibrating') {
-      return;
-    }
-
-    let readingInterval: NodeJS.Timeout;
-
-    const updateReadings = async () => {
-      try {
-        const data = await fetchSensorData();
-        setCurrentReadings(data);
-      } catch (error) {
-        console.error('Error fetching sensor data:', error);
-      }
-    };
-
-    updateReadings();
-    readingInterval = setInterval(updateReadings, 1000);
-
-    return () => {
-      clearInterval(readingInterval);
-    };
-  }, [co2O2CalibrationStep, fetchSensorData]);
+  // REMOVED: The conflicting useEffect hook for CO2/O2 calibration
 
   const handleStartCoCalibration = async () => {
     setCoReadingsCollected(0);
     setCoCaptureProgress(0);
     
-    const result = await startCoCalibration(parseFloat(coReference), (collected, total) => {
-      setCoReadingsCollected(collected);
-      setCoCaptureProgress((collected / total) * 100);
-    });
+    // MODIFIED: The onProgress callback now receives the current reading
+    const result = await startCoCalibration(
+      parseFloat(coReference), 
+      (collected, total, currentReading) => {
+        setCoReadingsCollected(collected);
+        setCoCaptureProgress((collected / total) * 100);
+        // MODIFIED: Update the UI with the reading from the hook
+        setCurrentReadings(prev => ({ ...prev, co: currentReading }));
+      }
+    );
     
     // Refresh calibration factors after successful calibration
     if (result.success) {
@@ -121,12 +82,15 @@ const Calibration = () => {
     setCo2O2ReadingsCollected(0);
     setCo2O2CaptureProgress(0);
     
+    // MODIFIED: The onProgress callback now receives the current readings
     const result = await startCo2O2Calibration(
       parseFloat(co2Reference), 
       parseFloat(o2Reference),
-      (collected, total) => {
+      (collected, total, co2Reading, o2Reading) => {
         setCo2O2ReadingsCollected(collected);
         setCo2O2CaptureProgress((collected / total) * 100);
+        // MODIFIED: Update the UI with the readings from the hook
+        setCurrentReadings(prev => ({ ...prev, co2: co2Reading, o2: o2Reading }));
       }
     );
     

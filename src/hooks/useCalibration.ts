@@ -14,7 +14,11 @@ export interface GasCalibrationData {
 type CalibrationStep = 'idle' | 'calibrating' | 'computing' | 'complete';
 type GasType = 'CO' | 'CO2' | 'O2';
 
-const BACKEND_URL = 'http://169.254.13.182/isga_v4/php-backend';
+// === IMPORTANT ===
+// Make sure this IP address is correct for your PHP server
+const BACKEND_URL = 'http://192.168.1.11/isga_v4/php-backend'; 
+// =================
+
 const TOTAL_READINGS = 30;
 const READING_INTERVAL_MS = 6000; // 6 seconds between readings (180s total / 30 readings)
 const CRITICAL_T_VALUE = 2.045; // For n=30, df=29, α=0.05
@@ -41,6 +45,9 @@ export const useCalibration = () => {
 
   const fetchSensorData = async () => {
     const response = await fetch(`${BACKEND_URL}/get_sensor_data.php`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch sensor data: ${response.statusText}`);
+    }
     const data = await response.json();
     return {
       co: parseFloat(data.co) || 0,
@@ -49,7 +56,11 @@ export const useCalibration = () => {
     };
   };
 
-  const startCoCalibration = async (coReference: number, onProgress?: (collected: number, total: number) => void) => {
+  const startCoCalibration = async (
+    coReference: number, 
+    // MODIFIED: Added currentReading to the onProgress callback
+    onProgress?: (collected: number, total: number, currentReading: number) => void
+  ) => {
     if (isNaN(coReference)) {
       toast({
         title: "Reference Value Required",
@@ -76,7 +87,8 @@ export const useCalibration = () => {
 
         // Update progress
         if (onProgress) {
-          onProgress(i + 1, TOTAL_READINGS);
+          // MODIFIED: Pass coValue back to the UI
+          onProgress(i + 1, TOTAL_READINGS, coValue);
         }
 
         if (i < TOTAL_READINGS - 1) {
@@ -114,7 +126,7 @@ export const useCalibration = () => {
       console.error('Error during CO calibration:', error);
       toast({
         title: "Calibration Failed",
-        description: "Failed to capture CO sensor data.",
+        description: error instanceof Error ? error.message : "Failed to capture CO sensor data.",
         variant: "destructive",
       });
       setCoCalibrationStep('idle');
@@ -122,7 +134,12 @@ export const useCalibration = () => {
     }
   };
 
-  const startCo2O2Calibration = async (co2Reference: number, o2Reference: number, onProgress?: (collected: number, total: number) => void) => {
+  const startCo2O2Calibration = async (
+    co2Reference: number, 
+    o2Reference: number, 
+    // MODIFIED: Added current readings to the onProgress callback
+    onProgress?: (collected: number, total: number, co2Reading: number, o2Reading: number) => void
+  ) => {
     if (isNaN(co2Reference) || isNaN(o2Reference)) {
       toast({
         title: "Reference Values Required",
@@ -150,7 +167,8 @@ export const useCalibration = () => {
 
         // Update progress
         if (onProgress) {
-          onProgress(i + 1, TOTAL_READINGS);
+          // MODIFIED: Pass sensor data back to the UI
+          onProgress(i + 1, TOTAL_READINGS, sensorData.co2, sensorData.o2);
         }
 
         if (i < TOTAL_READINGS - 1) {
@@ -196,7 +214,7 @@ export const useCalibration = () => {
       console.error('Error during CO2/O2 calibration:', error);
       toast({
         title: "Calibration Failed",
-        description: "Failed to capture CO2/O2 sensor data.",
+        description: error instanceof Error ? error.message : "Failed to capture CO2/O2 sensor data.",
         variant: "destructive",
       });
       setCo2O2CalibrationStep('idle');
@@ -213,6 +231,8 @@ export const useCalibration = () => {
 
     try {
       const n = readings.length;
+      if (n < 2) throw new Error("Not enough readings to compute t-value");
+
       const sampleVariance = readings.reduce((sum, x) => sum + Math.pow(x - sampleMean, 2), 0) / (n - 1);
       const sampleStdDev = Math.sqrt(sampleVariance);
       const standardError = sampleStdDev / Math.sqrt(n);
@@ -293,6 +313,7 @@ export const useCalibration = () => {
     try {
       // CO2 computation
       const co2N = co2Readings.length;
+      if (co2N < 2) throw new Error("Not enough CO2 readings");
       const co2Variance = co2Readings.reduce((sum, x) => sum + Math.pow(x - co2Mean, 2), 0) / (co2N - 1);
       const co2StdDev = Math.sqrt(co2Variance);
       const co2SE = co2StdDev / Math.sqrt(co2N);
@@ -302,6 +323,7 @@ export const useCalibration = () => {
 
       // O2 computation
       const o2N = o2Readings.length;
+      if (o2N < 2) throw new Error("Not enough O2 readings");
       const o2Variance = o2Readings.reduce((sum, x) => sum + Math.pow(x - o2Mean, 2), 0) / (o2N - 1);
       const o2StdDev = Math.sqrt(o2Variance);
       const o2SE = o2StdDev / Math.sqrt(o2N);
@@ -332,8 +354,8 @@ export const useCalibration = () => {
         correction_slope: Number(o2Slope),
         correction_intercept: 0,
       };
-
-      await Promise.all([
+      
+      const [co2Response, o2Response] = await Promise.all([
         fetch(`${BACKEND_URL}/save_calibration.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -345,6 +367,11 @@ export const useCalibration = () => {
           body: JSON.stringify(o2Payload),
         }),
       ]);
+
+      if (!co2Response.ok || !o2Response.ok) {
+        console.error('Failed to save CO2/O2 calibration');
+        throw new Error('Failed to save calibration data');
+      }
 
       setCo2Data({
         reference_value: co2Reference,

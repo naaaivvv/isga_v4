@@ -1,7 +1,8 @@
 <?php
-// Disable error display to prevent HTML in JSON response
-error_reporting(0);
-ini_set('display_errors', 0);
+// ===== TEMPORARY DEBUGGING =====
+// Force all errors to be displayed
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
@@ -63,13 +64,26 @@ try {
         throw new Exception("Failed to prepare statement: " . $conn->error);
     }
     
+    // ===== THIS IS THE CORRECTED LINE =====
+    // The type string matches the 15 variables being bound
     $stmt->bind_param(
-        "sdsdidddsdddd",
-        $gas_type, $reference_value, $readings, $average,
-        $t_value, $passed, $correction_slope, $correction_intercept,
+        "sdsddiddsddidd",
+        $gas_type,            // s (string)
+        $reference_value,     // d (double)
+        $readings,            // s (string, JSON)
+        $average,             // d (double)
+        $t_value,             // d (double)
+        $passed,              // i (integer)
+        $correction_slope,    // d (double)
+        $correction_intercept, // d (double)
         // ON DUPLICATE KEY UPDATE values
-        $reference_value, $readings, $average,
-        $t_value, $passed, $correction_slope, $correction_intercept
+        $reference_value,     // d (double)
+        $readings,            // s (string, JSON)
+        $average,             // d (double)
+        $t_value,             // d (double)
+        $passed,              // i (integer)
+        $correction_slope,    // d (double)
+        $correction_intercept  // d (double)
     );
 
     if ($stmt->execute()) {

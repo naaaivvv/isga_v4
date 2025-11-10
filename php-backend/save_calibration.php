@@ -26,12 +26,8 @@ $data = json_decode(file_get_contents("php://input"), true);
 
 $gas_type = isset($data['gas_type']) ? $data['gas_type'] : '';
 $reference_value = isset($data['reference_value']) ? floatval($data['reference_value']) : 0;
-$trial_1_readings = isset($data['trial_1_readings']) ? json_encode($data['trial_1_readings']) : null;
-$trial_2_readings = isset($data['trial_2_readings']) ? json_encode($data['trial_2_readings']) : null;
-$trial_3_readings = isset($data['trial_3_readings']) ? json_encode($data['trial_3_readings']) : null;
-$trial_1_avg = isset($data['trial_1_avg']) ? floatval($data['trial_1_avg']) : null;
-$trial_2_avg = isset($data['trial_2_avg']) ? floatval($data['trial_2_avg']) : null;
-$trial_3_avg = isset($data['trial_3_avg']) ? floatval($data['trial_3_avg']) : null;
+$readings = isset($data['readings']) ? json_encode($data['readings']) : null;
+$average = isset($data['average']) ? floatval($data['average']) : null;
 $t_value = isset($data['t_value']) ? floatval($data['t_value']) : null;
 $passed = isset($data['passed']) ? intval($data['passed']) : 0;
 $correction_slope = isset($data['correction_slope']) ? floatval($data['correction_slope']) : 1;
@@ -43,20 +39,14 @@ if (empty($gas_type) || !in_array($gas_type, ['CO', 'CO2', 'O2'])) {
     exit();
 }
 
-$sql = "INSERT INTO calibration_v2 (
-    gas_type, reference_value, 
-    trial_1_readings, trial_2_readings, trial_3_readings,
-    trial_1_avg, trial_2_avg, trial_3_avg,
+$sql = "INSERT INTO calibration (
+    gas_type, reference_value, readings, average,
     t_value, passed, correction_slope, correction_intercept
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 ON DUPLICATE KEY UPDATE 
     reference_value = ?,
-    trial_1_readings = ?,
-    trial_2_readings = ?,
-    trial_3_readings = ?,
-    trial_1_avg = ?,
-    trial_2_avg = ?,
-    trial_3_avg = ?,
+    readings = ?,
+    average = ?,
     t_value = ?,
     passed = ?,
     correction_slope = ?,
@@ -64,15 +54,11 @@ ON DUPLICATE KEY UPDATE
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param(
-    "sdsssddddiddsdssdddddd",
-    $gas_type, $reference_value,
-    $trial_1_readings, $trial_2_readings, $trial_3_readings,
-    $trial_1_avg, $trial_2_avg, $trial_3_avg,
+    "sdsdidddsdddd",
+    $gas_type, $reference_value, $readings, $average,
     $t_value, $passed, $correction_slope, $correction_intercept,
     // ON DUPLICATE KEY UPDATE values
-    $reference_value,
-    $trial_1_readings, $trial_2_readings, $trial_3_readings,
-    $trial_1_avg, $trial_2_avg, $trial_3_avg,
+    $reference_value, $readings, $average,
     $t_value, $passed, $correction_slope, $correction_intercept
 );
 

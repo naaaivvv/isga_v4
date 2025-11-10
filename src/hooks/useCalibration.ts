@@ -3,8 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface GasCalibrationData {
   reference_value: number;
-  trial_readings: number[];
-  trial_avg: number;
+  readings: number[];
+  average: number;
   t_value: number | null;
   passed: boolean | null;
   correction_slope: number;
@@ -21,8 +21,8 @@ const CRITICAL_T_VALUE = 2.045; // For n=30, df=29, α=0.05
 
 const createEmptyCalibrationData = (defaultRef = 0): GasCalibrationData => ({
   reference_value: defaultRef,
-  trial_readings: [],
-  trial_avg: 0,
+  readings: [],
+  average: 0,
   t_value: null,
   passed: null,
   correction_slope: 1,
@@ -93,8 +93,8 @@ export const useCalibration = () => {
       setCoData(prev => ({
         ...prev,
         reference_value: coReference,
-        trial_readings: coReadings,
-        trial_avg: coAvg,
+        readings: coReadings,
+        average: coAvg,
       }));
 
       toast({
@@ -168,15 +168,15 @@ export const useCalibration = () => {
       setCo2Data(prev => ({
         ...prev,
         reference_value: co2Reference,
-        trial_readings: co2Readings,
-        trial_avg: co2Avg,
+        readings: co2Readings,
+        average: co2Avg,
       }));
 
       setO2Data(prev => ({
         ...prev,
         reference_value: o2Reference,
-        trial_readings: o2Readings,
-        trial_avg: o2Avg,
+        readings: o2Readings,
+        average: o2Avg,
       }));
 
       toast({
@@ -226,19 +226,15 @@ export const useCalibration = () => {
       const payload = {
         gas_type: 'CO',
         reference_value: Number(referenceValue),
-        trial_1_readings: readings,
-        trial_2_readings: [],
-        trial_3_readings: [],
-        trial_1_avg: Number(sampleMean),
-        trial_2_avg: null,
-        trial_3_avg: null,
+        readings: readings,
+        average: Number(sampleMean),
         t_value: Number(tValue),
         passed: passed ? 1 : 0,
         correction_slope: Number(correctionSlope),
         correction_intercept: Number(correctionIntercept),
       };
 
-      const response = await fetch(`${BACKEND_URL}/save_unified_calibration.php`, {
+      const response = await fetch(`${BACKEND_URL}/save_calibration.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -252,8 +248,8 @@ export const useCalibration = () => {
 
       const updatedData: GasCalibrationData = {
         reference_value: referenceValue,
-        trial_readings: readings,
-        trial_avg: sampleMean,
+        readings: readings,
+        average: sampleMean,
         t_value: tValue,
         passed: passed,
         correction_slope: correctionSlope,
@@ -317,12 +313,8 @@ export const useCalibration = () => {
       const co2Payload = {
         gas_type: 'CO2',
         reference_value: Number(co2Reference),
-        trial_1_readings: co2Readings,
-        trial_2_readings: [],
-        trial_3_readings: [],
-        trial_1_avg: Number(co2Mean),
-        trial_2_avg: null,
-        trial_3_avg: null,
+        readings: co2Readings,
+        average: Number(co2Mean),
         t_value: Number(co2TValue),
         passed: co2Passed ? 1 : 0,
         correction_slope: Number(co2Slope),
@@ -333,12 +325,8 @@ export const useCalibration = () => {
       const o2Payload = {
         gas_type: 'O2',
         reference_value: Number(o2Reference),
-        trial_1_readings: o2Readings,
-        trial_2_readings: [],
-        trial_3_readings: [],
-        trial_1_avg: Number(o2Mean),
-        trial_2_avg: null,
-        trial_3_avg: null,
+        readings: o2Readings,
+        average: Number(o2Mean),
         t_value: Number(o2TValue),
         passed: o2Passed ? 1 : 0,
         correction_slope: Number(o2Slope),
@@ -346,12 +334,12 @@ export const useCalibration = () => {
       };
 
       await Promise.all([
-        fetch(`${BACKEND_URL}/save_unified_calibration.php`, {
+        fetch(`${BACKEND_URL}/save_calibration.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(co2Payload),
         }),
-        fetch(`${BACKEND_URL}/save_unified_calibration.php`, {
+        fetch(`${BACKEND_URL}/save_calibration.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(o2Payload),
@@ -360,8 +348,8 @@ export const useCalibration = () => {
 
       setCo2Data({
         reference_value: co2Reference,
-        trial_readings: co2Readings,
-        trial_avg: co2Mean,
+        readings: co2Readings,
+        average: co2Mean,
         t_value: co2TValue,
         passed: co2Passed,
         correction_slope: co2Slope,
@@ -370,8 +358,8 @@ export const useCalibration = () => {
 
       setO2Data({
         reference_value: o2Reference,
-        trial_readings: o2Readings,
-        trial_avg: o2Mean,
+        readings: o2Readings,
+        average: o2Mean,
         t_value: o2TValue,
         passed: o2Passed,
         correction_slope: o2Slope,
@@ -402,7 +390,7 @@ export const useCalibration = () => {
 
   const fetchCalibrationData = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/get_unified_calibration.php`);
+      const response = await fetch(`${BACKEND_URL}/get_calibration.php`);
       if (!response.ok) throw new Error('Failed to fetch calibration data');
       
       const data = await response.json();
@@ -410,8 +398,8 @@ export const useCalibration = () => {
       if (data.CO) {
         setCoData({
           reference_value: data.CO.reference_value || 0,
-          trial_readings: data.CO.trial_1_readings || [],
-          trial_avg: data.CO.trial_1_avg || 0,
+          readings: data.CO.readings || [],
+          average: data.CO.average || 0,
           t_value: data.CO.t_value,
           passed: data.CO.passed === 1,
           correction_slope: data.CO.correction_slope || 1,
@@ -422,8 +410,8 @@ export const useCalibration = () => {
       if (data.CO2) {
         setCo2Data({
           reference_value: data.CO2.reference_value || 0,
-          trial_readings: data.CO2.trial_1_readings || [],
-          trial_avg: data.CO2.trial_1_avg || 0,
+          readings: data.CO2.readings || [],
+          average: data.CO2.average || 0,
           t_value: data.CO2.t_value,
           passed: data.CO2.passed === 1,
           correction_slope: data.CO2.correction_slope || 1,
@@ -434,8 +422,8 @@ export const useCalibration = () => {
       if (data.O2) {
         setO2Data({
           reference_value: data.O2.reference_value || 20.9,
-          trial_readings: data.O2.trial_1_readings || [],
-          trial_avg: data.O2.trial_1_avg || 0,
+          readings: data.O2.readings || [],
+          average: data.O2.average || 0,
           t_value: data.O2.t_value,
           passed: data.O2.passed === 1,
           correction_slope: data.O2.correction_slope || 1,

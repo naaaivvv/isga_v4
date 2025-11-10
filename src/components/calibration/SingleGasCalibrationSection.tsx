@@ -119,7 +119,7 @@ export const SingleGasCalibrationSection = ({
               <div>
                 <p className="text-xs text-muted-foreground">Measured Average</p>
                 <p className="text-lg font-semibold">
-                  {calibrationData.trial_avg.toFixed(2)} {gasUnit}
+                  {calibrationData.average.toFixed(2)} {gasUnit}
                 </p>
               </div>
               <div>

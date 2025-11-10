@@ -31,7 +31,7 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const fetchCalibrationFactors = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/get_unified_calibration.php`);
+      const response = await fetch(`${BACKEND_URL}/get_calibration.php`);
       if (!response.ok) throw new Error('Failed to fetch calibration data');
       
       const data = await response.json();

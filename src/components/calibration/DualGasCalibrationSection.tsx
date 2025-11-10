@@ -145,7 +145,7 @@ export const DualGasCalibrationSection = ({
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Measured Avg</p>
-                  <p className="text-lg font-semibold">{co2Data.trial_avg.toFixed(2)}%</p>
+                  <p className="text-lg font-semibold">{co2Data.average.toFixed(2)}%</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">T-Value</p>
@@ -171,7 +171,7 @@ export const DualGasCalibrationSection = ({
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Measured Avg</p>
-                  <p className="text-lg font-semibold">{o2Data.trial_avg.toFixed(2)}%</p>
+                  <p className="text-lg font-semibold">{o2Data.average.toFixed(2)}%</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">T-Value</p>

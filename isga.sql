@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Nov 03, 2025 at 08:26 AM
+-- Generation Time: Nov 10, 2025 at 01:59 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -49,32 +49,37 @@ INSERT INTO `calibration` (`id`, `gas_type`, `calibrated_value`, `updated_at`) V
 -- --------------------------------------------------------
 
 --
--- Table structure for table `co_calibration`
+-- Table structure for table `calibration_v2`
 --
 
-DROP TABLE IF EXISTS `co_calibration`;
-CREATE TABLE IF NOT EXISTS `co_calibration` (
+DROP TABLE IF EXISTS `calibration_v2`;
+CREATE TABLE IF NOT EXISTS `calibration_v2` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `gas_500_readings` text,
-  `gas_100_readings` text,
-  `gas_50_readings` text,
-  `t_value` float DEFAULT NULL,
-  `passed` tinyint(1) DEFAULT NULL,
-  `correction_slope` float DEFAULT NULL,
-  `correction_intercept` float DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `gas_type` enum('CO','CO2','O2') NOT NULL,
+  `reference_value` float NOT NULL COMMENT 'Laboratory reference value',
+  `trial_1_readings` text COMMENT 'JSON array of 10 readings',
+  `trial_2_readings` text COMMENT 'JSON array of 10 readings',
+  `trial_3_readings` text COMMENT 'JSON array of 10 readings',
+  `trial_1_avg` float DEFAULT NULL,
+  `trial_2_avg` float DEFAULT NULL,
+  `trial_3_avg` float DEFAULT NULL,
+  `t_value` float DEFAULT NULL COMMENT 'T-test result',
+  `passed` tinyint(1) DEFAULT NULL COMMENT '1 if calibration passed, 0 if failed',
+  `correction_slope` float DEFAULT '1',
+  `correction_intercept` float DEFAULT '0',
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_gas_type` (`gas_type`)
 ) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
 
 --
--- Dumping data for table `co_calibration`
+-- Dumping data for table `calibration_v2`
 --
 
-INSERT INTO `co_calibration` (`id`, `gas_500_readings`, `gas_100_readings`, `gas_50_readings`, `t_value`, `passed`, `correction_slope`, `correction_intercept`, `created_at`, `updated_at`) VALUES
-(1, '[12,12,12,12,12,12,12,12,12,12]', '[12,12,12,12,12,12,12,12,12,12]', '[12,12,12,12,12,12,12,12,12,12]', -4.3118, 0, 1, 0, '2025-11-03 06:43:54', '2025-11-03 06:43:54'),
-(2, '[502,502,502,502,502,502,502,502,502,502]', '[98.9,98.9,98.9,98.9,98.9,98.9,98.9,98.9,98.9,98.9]', '[98.9,98.9,51.1,51.1,51.1,51.1,51.1,51.1,51.1,51.1]', 3.285, 0, 1.00842, -5.71107, '2025-11-03 07:55:39', '2025-11-03 07:55:39'),
-(3, '[502,502,502,502,502,502,502,502,502,502]', '[101.1,101.1,101.1,101.1,101.1,101.1,101.1,101.1,101.1,101.1]', '[50.1,50.1,50.1,50.1,50.1,50.1,50.1,50.1,50.1,50.1]', 5.83158, 0, 0.996543, -0.314051, '2025-11-03 07:59:36', '2025-11-03 07:59:36');
+INSERT INTO `calibration_v2` (`id`, `gas_type`, `reference_value`, `trial_1_readings`, `trial_2_readings`, `trial_3_readings`, `trial_1_avg`, `trial_2_avg`, `trial_3_avg`, `t_value`, `passed`, `correction_slope`, `correction_intercept`, `updated_at`) VALUES
+(1, 'CO', 50, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, '2025-11-07 20:12:52'),
+(2, 'CO2', 0.04, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, '2025-11-07 20:13:05'),
+(3, 'O2', 20.9, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, '2025-11-03 17:51:36');
 
 -- --------------------------------------------------------
 
@@ -1047,7 +1052,7 @@ INSERT INTO `sensor` (`id`, `node_name`, `co`, `co2`, `o2`, `fan`, `compressor`,
 (929, 'node111', 49.5, 0.0448, 20.9, 0, 0, '2025-11-03 07:58:40', '2025-11-03 07:58:40'),
 (930, 'node111', 50.2, 0.0442, 20.9, 0, 0, '2025-11-03 07:58:40', '2025-11-03 07:58:40'),
 (931, 'node111', 52, 0.0444, 20.9, 0, 0, '2025-11-03 07:58:40', '2025-11-03 07:58:40'),
-(932, 'node111', 50.1, 0.044, 20.9, 0, 0, '2025-11-03 07:58:40', '2025-11-03 07:58:40');
+(932, 'node111', 50.3, 0.045, 20.86, 0, 0, '2025-11-03 07:58:40', '2025-11-03 19:47:10');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

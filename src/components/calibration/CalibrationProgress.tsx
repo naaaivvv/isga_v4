@@ -28,7 +28,9 @@ export const CalibrationProgress = ({
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center p-4 bg-muted rounded-lg">
             <Activity className="w-6 h-6 mx-auto mb-2 text-red-500" />
-            <p className="text-2xl font-bold">{currentReadings.co.toFixed(2)}</p>
+            <p className="text-2xl font-bold">
+              {currentReadings.co > 2000 ? ">2000" : currentReadings.co.toFixed(2)}
+            </p>
             <p className="text-xs text-muted-foreground">CO (ppm)</p>
           </div>
           <div className="text-center p-4 bg-muted rounded-lg">

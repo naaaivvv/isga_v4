@@ -86,7 +86,7 @@ const Index = () => {
 
           return {
             timestamp: item.timestamp,
-            co: coCalibrated,
+            co: Math.min(coCalibrated, 2000), // Cap CO at 2000 ppm
             co2: co2Calibrated,
             o2: o2Calibrated,
           };
@@ -146,7 +146,7 @@ const Index = () => {
                       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     }}
                   />
-                  <YAxis tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} domain={[0, 2000]} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line 
                     type="monotone" 

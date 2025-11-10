@@ -104,12 +104,12 @@ const SensorDataCards = () => {
           <div className="space-y-4">
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-foreground">
-                {coLevel.toFixed(1)}
+                {coLevel > 2000 ? ">2000" : coLevel.toFixed(1)}
               </span>
               <span className="text-muted-foreground">ppm</span>
             </div>
-            <Progress value={coLevel} className="h-2" />
-            <p className="text-sm text-muted-foreground">Safe limit: 50 ppm</p>
+            <Progress value={Math.min(coLevel, 2000)} className="h-2" />
+            <p className="text-sm text-muted-foreground">Safe limit: 50 ppm | Max detection: 2000 ppm</p>
           </div>
         </CardContent>
       </Card>

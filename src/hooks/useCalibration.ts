@@ -23,6 +23,10 @@ const TOTAL_READINGS = 30;
 const READING_INTERVAL_MS = 6000; // 6 seconds between readings (180s total / 30 readings)
 const CRITICAL_T_VALUE = 2.045; // For n=30, df=29, α=0.05
 
+// ===== FIX: Define a small number (Epsilon) to check against =====
+const EPSILON = 1e-9; 
+// ===================================================================
+
 const createEmptyCalibrationData = (defaultRef = 0): GasCalibrationData => ({
   reference_value: defaultRef,
   readings: [],
@@ -58,7 +62,6 @@ export const useCalibration = () => {
 
   const startCoCalibration = async (
     coReference: number, 
-    // MODIFIED: Added currentReading to the onProgress callback
     onProgress?: (collected: number, total: number, currentReading: number) => void
   ) => {
     if (isNaN(coReference)) {
@@ -85,9 +88,7 @@ export const useCalibration = () => {
         const coValue = Math.min(sensorData.co, 2000); // Cap at 2000 ppm
         coReadings.push(coValue);
 
-        // Update progress
         if (onProgress) {
-          // MODIFIED: Pass coValue back to the UI
           onProgress(i + 1, TOTAL_READINGS, coValue);
         }
 
@@ -116,7 +117,6 @@ export const useCalibration = () => {
 
       setCoCalibrationStep('idle');
 
-      // Auto-compute results
       setTimeout(() => {
         computeCoCalibration(coReference, coReadings, coAvg);
       }, 500);
@@ -137,7 +137,6 @@ export const useCalibration = () => {
   const startCo2O2Calibration = async (
     co2Reference: number, 
     o2Reference: number, 
-    // MODIFIED: Added current readings to the onProgress callback
     onProgress?: (collected: number, total: number, co2Reading: number, o2Reading: number) => void
   ) => {
     if (isNaN(co2Reference) || isNaN(o2Reference)) {
@@ -165,9 +164,7 @@ export const useCalibration = () => {
         co2Readings.push(sensorData.co2);
         o2Readings.push(sensorData.o2);
 
-        // Update progress
         if (onProgress) {
-          // MODIFIED: Pass sensor data back to the UI
           onProgress(i + 1, TOTAL_READINGS, sensorData.co2, sensorData.o2);
         }
 
@@ -204,7 +201,6 @@ export const useCalibration = () => {
 
       setCo2O2CalibrationStep('idle');
 
-      // Auto-compute results
       setTimeout(() => {
         computeCo2O2Calibration(co2Reference, co2Readings, co2Avg, o2Reference, o2Readings, o2Avg);
       }, 500);
@@ -237,7 +233,10 @@ export const useCalibration = () => {
       const sampleStdDev = Math.sqrt(sampleVariance);
       const standardError = sampleStdDev / Math.sqrt(n);
       
-      const tValue = standardError !== 0 ? (sampleMean - referenceValue) / standardError : 0;
+      // ===== FIX: Check if standardError is effectively zero =====
+      const tValue = standardError > EPSILON ? (sampleMean - referenceValue) / standardError : 0;
+      // ============================================================
+
       const passed = Math.abs(tValue) <= CRITICAL_T_VALUE;
 
       const correctionSlope = sampleMean !== 0 ? referenceValue / sampleMean : 1;
@@ -317,7 +316,11 @@ export const useCalibration = () => {
       const co2Variance = co2Readings.reduce((sum, x) => sum + Math.pow(x - co2Mean, 2), 0) / (co2N - 1);
       const co2StdDev = Math.sqrt(co2Variance);
       const co2SE = co2StdDev / Math.sqrt(co2N);
-      const co2TValue = co2SE !== 0 ? (co2Mean - co2Reference) / co2SE : 0;
+      
+      // ===== FIX: Check if standardError is effectively zero =====
+      const co2TValue = co2SE > EPSILON ? (co2Mean - co2Reference) / co2SE : 0;
+      // ============================================================
+
       const co2Passed = Math.abs(co2TValue) <= CRITICAL_T_VALUE;
       const co2Slope = co2Mean !== 0 ? co2Reference / co2Mean : 1;
 
@@ -327,7 +330,11 @@ export const useCalibration = () => {
       const o2Variance = o2Readings.reduce((sum, x) => sum + Math.pow(x - o2Mean, 2), 0) / (o2N - 1);
       const o2StdDev = Math.sqrt(o2Variance);
       const o2SE = o2StdDev / Math.sqrt(o2N);
-      const o2TValue = o2SE !== 0 ? (o2Mean - o2Reference) / o2SE : 0;
+
+      // ===== FIX: Check if standardError is effectively zero =====
+      const o2TValue = o2SE > EPSILON ? (o2Mean - o2Reference) / o2SE : 0;
+      // ============================================================
+
       const o2Passed = Math.abs(o2TValue) <= CRITICAL_T_VALUE;
       const o2Slope = o2Mean !== 0 ? o2Reference / o2Mean : 1;
 
@@ -433,7 +440,6 @@ export const useCalibration = () => {
         return null;
       }
       
-      // Handle error response
       if (data.error) {
         console.error('API error:', data.error);
         return null;

@@ -64,26 +64,26 @@ try {
         throw new Exception("Failed to prepare statement: " . $conn->error);
     }
     
-    // ===== THIS IS THE CORRECTED LINE =====
-    // The type string matches the 15 variables being bound
+    // ===== THIS IS THE CORRECTED LINE (line 69) =====
+    // The type string now has 15 characters to match the 15 variables
     $stmt->bind_param(
-        "sdsddiddsddidd",
-        $gas_type,            // s (string)
-        $reference_value,     // d (double)
-        $readings,            // s (string, JSON)
-        $average,             // d (double)
-        $t_value,             // d (double)
-        $passed,              // i (integer)
-        $correction_slope,    // d (double)
-        $correction_intercept, // d (double)
-        // ON DUPLICATE KEY UPDATE values
-        $reference_value,     // d (double)
-        $readings,            // s (string, JSON)
-        $average,             // d (double)
-        $t_value,             // d (double)
-        $passed,              // i (integer)
-        $correction_slope,    // d (double)
-        $correction_intercept  // d (double)
+        "sdsddidddsddidd",     // <--- THE FIX IS HERE
+        $gas_type,             // s (string)
+        $reference_value,      // d (double)
+        $readings,             // s (string, JSON)
+        $average,              // d (double)
+        $t_value,              // d (double)
+        $passed,               // i (integer)
+        $correction_slope,     // d (double)
+        $correction_intercept,  // d (double)
+        // ON DUPLICATE KEY UPDATE values (7)
+        $reference_value,      // d (double)
+        $readings,             // s (string, JSON)
+        $average,              // d (double)
+        $t_value,              // d (double)
+        $passed,               // i (integer)
+        $correction_slope,     // d (double)
+        $correction_intercept   // d (double)
     );
 
     if ($stmt->execute()) {

@@ -391,9 +391,26 @@ export const useCalibration = () => {
   const fetchCalibrationData = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/get_calibration.php`);
-      if (!response.ok) throw new Error('Failed to fetch calibration data');
+      if (!response.ok) {
+        console.error('Failed to fetch calibration data, HTTP status:', response.status);
+        return null;
+      }
       
-      const data = await response.json();
+      const text = await response.text();
+      let data;
+      
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('Invalid JSON response:', text.substring(0, 200));
+        return null;
+      }
+      
+      // Handle error response
+      if (data.error) {
+        console.error('API error:', data.error);
+        return null;
+      }
       
       if (data.CO) {
         setCoData({

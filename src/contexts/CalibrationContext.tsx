@@ -32,9 +32,26 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const fetchCalibrationFactors = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/get_calibration.php`);
-      if (!response.ok) throw new Error('Failed to fetch calibration data');
+      if (!response.ok) {
+        console.error('Failed to fetch calibration factors, HTTP status:', response.status);
+        return;
+      }
       
-      const data = await response.json();
+      const text = await response.text();
+      let data;
+      
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('Invalid JSON response from calibration endpoint:', text.substring(0, 200));
+        return;
+      }
+      
+      // Handle error response
+      if (data.error) {
+        console.error('API error:', data.error);
+        return;
+      }
       
       setCalibrationFactors({
         co: data.CO ? {

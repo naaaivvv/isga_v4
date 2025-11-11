@@ -21,8 +21,7 @@ const SensorDataCards = () => {
 
         // Store raw values
         setCoRaw(Number(data.co) || 0);
-        const co2ppm = Number(data.co2) || 0;
-        setCo2Raw(co2ppm / 10000); // Convert ppm to percent
+        setCo2Raw(Number(data.co2) || 0); // Already in percent format
         setO2Raw(Number(data.o2) || 0);
       } catch (error) {
         console.error("Error fetching sensor data:", error);

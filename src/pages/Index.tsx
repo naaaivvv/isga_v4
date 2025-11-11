@@ -27,11 +27,11 @@ const Index = () => {
         const response = await fetch("http://192.168.1.6/isga_v4/php-backend/get_sensor_history.php");
         const data: HistoricalData[] = await response.json();
 
-        // Store raw data and convert CO2 from ppm to percent
+        // Store raw data (CO2 already in percent format)
         const processedData = data.map(item => ({
           timestamp: item.timestamp,
           co: Number(item.co) || 0,
-          co2: (Number(item.co2) || 0) / 10000, // Convert ppm to percent
+          co2: Number(item.co2) || 0, // Already in percent format
           o2: Number(item.o2) || 0,
         }));
 

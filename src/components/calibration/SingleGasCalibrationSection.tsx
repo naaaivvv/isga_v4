@@ -99,7 +99,7 @@ export const SingleGasCalibrationSection = ({
             <Progress value={captureProgress} className="h-2" />
             <div className="text-center">
               <p className="text-2xl font-bold">
-                {gasName === "CO" && currentReading > 2000 ? ">2000" : currentReading.toFixed(2)}
+                {gasName === "CO" && currentReading > 2000 ? ">2000" : currentReading.toFixed(1)}
               </p>
               <p className="text-xs text-muted-foreground">Current Reading ({gasUnit})</p>
             </div>
@@ -113,13 +113,13 @@ export const SingleGasCalibrationSection = ({
               <div>
                 <p className="text-xs text-muted-foreground">Reference Value</p>
                 <p className="text-lg font-semibold">
-                  {calibrationData.reference_value.toFixed(2)} {gasUnit}
+                  {calibrationData.reference_value.toFixed(1)} {gasUnit}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Measured Average</p>
                 <p className="text-lg font-semibold">
-                  {calibrationData.average.toFixed(2)} {gasUnit}
+                  {calibrationData.average.toFixed(1)} {gasUnit}
                 </p>
               </div>
               <div>

@@ -83,7 +83,7 @@ const SensorDataCards = () => {
           <div className="space-y-4">
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-foreground">
-                {co2Level.toFixed(2)}
+                {co2Level.toFixed(4)}
               </span>
               <span className="text-muted-foreground">%</span>
             </div>
@@ -109,7 +109,7 @@ const SensorDataCards = () => {
           <div className="space-y-4">
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-foreground">
-                {o2Level.toFixed(1)}
+                {o2Level.toFixed(2)}
               </span>
               <span className="text-muted-foreground">%</span>
             </div>

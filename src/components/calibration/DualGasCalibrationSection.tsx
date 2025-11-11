@@ -117,7 +117,7 @@ export const DualGasCalibrationSection = ({
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div className="text-center p-3 bg-background rounded">
                 <Droplet className="w-5 h-5 mx-auto mb-1 text-blue-500" />
-                <p className="text-2xl font-bold">{currentCo2Reading.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{currentCo2Reading.toFixed(4)}</p>
                 <p className="text-xs text-muted-foreground">CO₂ (%)</p>
               </div>
               <div className="text-center p-3 bg-background rounded">
@@ -141,11 +141,11 @@ export const DualGasCalibrationSection = ({
               <div className="space-y-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Reference</p>
-                  <p className="text-lg font-semibold">{co2Data.reference_value.toFixed(2)}%</p>
+                  <p className="text-lg font-semibold">{co2Data.reference_value.toFixed(4)}%</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Measured Avg</p>
-                  <p className="text-lg font-semibold">{co2Data.average.toFixed(2)}%</p>
+                  <p className="text-lg font-semibold">{co2Data.average.toFixed(4)}%</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">T-Value</p>

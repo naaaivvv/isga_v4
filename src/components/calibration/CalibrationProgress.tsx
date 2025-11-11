@@ -29,13 +29,13 @@ export const CalibrationProgress = ({
           <div className="text-center p-4 bg-muted rounded-lg">
             <Activity className="w-6 h-6 mx-auto mb-2 text-red-500" />
             <p className="text-2xl font-bold">
-              {currentReadings.co > 2000 ? ">2000" : currentReadings.co.toFixed(2)}
+              {currentReadings.co > 2000 ? ">2000" : currentReadings.co.toFixed(1)}
             </p>
             <p className="text-xs text-muted-foreground">CO (ppm)</p>
           </div>
           <div className="text-center p-4 bg-muted rounded-lg">
             <Droplet className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-            <p className="text-2xl font-bold">{currentReadings.co2.toFixed(2)}</p>
+            <p className="text-2xl font-bold">{currentReadings.co2.toFixed(4)}</p>
             <p className="text-xs text-muted-foreground">CO₂ (%)</p>
           </div>
           <div className="text-center p-4 bg-muted rounded-lg">

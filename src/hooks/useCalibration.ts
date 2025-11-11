@@ -229,13 +229,16 @@ export const useCalibration = () => {
       const n = readings.length;
       if (n < 2) throw new Error("Not enough readings to compute t-value");
 
-      const sampleVariance = readings.reduce((sum, x) => sum + Math.pow(x - sampleMean, 2), 0) / (n - 1);
-      const sampleStdDev = Math.sqrt(sampleVariance);
-      const standardError = sampleStdDev / Math.sqrt(n);
+      // Calculate using the formula: t = (ΣD/N) / sqrt((ΣD² - (ΣD)²/N) / ((N-1)N))
+      // Where D = (reading - reference_value)
+      const differences = readings.map(reading => reading - referenceValue);
+      const sumD = differences.reduce((sum, d) => sum + d, 0);
+      const sumDSquared = differences.reduce((sum, d) => sum + d * d, 0);
       
-      // ===== FIX: Check if standardError is effectively zero =====
-      const tValue = standardError > EPSILON ? (sampleMean - referenceValue) / standardError : 0;
-      // ============================================================
+      const numerator = sumD / n;
+      const denominator = Math.sqrt((sumDSquared - (sumD * sumD) / n) / ((n - 1) * n));
+      
+      const tValue = denominator > EPSILON ? numerator / denominator : 0;
 
       const passed = Math.abs(tValue) <= CRITICAL_T_VALUE;
 
@@ -310,30 +313,34 @@ export const useCalibration = () => {
     setCo2O2CalibrationStep('computing');
 
     try {
-      // CO2 computation
+      // CO2 computation using formula: t = (ΣD/N) / sqrt((ΣD² - (ΣD)²/N) / ((N-1)N))
       const co2N = co2Readings.length;
       if (co2N < 2) throw new Error("Not enough CO2 readings");
-      const co2Variance = co2Readings.reduce((sum, x) => sum + Math.pow(x - co2Mean, 2), 0) / (co2N - 1);
-      const co2StdDev = Math.sqrt(co2Variance);
-      const co2SE = co2StdDev / Math.sqrt(co2N);
       
-      // ===== FIX: Check if standardError is effectively zero =====
-      const co2TValue = co2SE > EPSILON ? (co2Mean - co2Reference) / co2SE : 0;
-      // ============================================================
+      const co2Differences = co2Readings.map(reading => reading - co2Reference);
+      const co2SumD = co2Differences.reduce((sum, d) => sum + d, 0);
+      const co2SumDSquared = co2Differences.reduce((sum, d) => sum + d * d, 0);
+      
+      const co2Numerator = co2SumD / co2N;
+      const co2Denominator = Math.sqrt((co2SumDSquared - (co2SumD * co2SumD) / co2N) / ((co2N - 1) * co2N));
+      
+      const co2TValue = co2Denominator > EPSILON ? co2Numerator / co2Denominator : 0;
 
       const co2Passed = Math.abs(co2TValue) <= CRITICAL_T_VALUE;
       const co2Slope = co2Mean !== 0 ? co2Reference / co2Mean : 1;
 
-      // O2 computation
+      // O2 computation using formula: t = (ΣD/N) / sqrt((ΣD² - (ΣD)²/N) / ((N-1)N))
       const o2N = o2Readings.length;
       if (o2N < 2) throw new Error("Not enough O2 readings");
-      const o2Variance = o2Readings.reduce((sum, x) => sum + Math.pow(x - o2Mean, 2), 0) / (o2N - 1);
-      const o2StdDev = Math.sqrt(o2Variance);
-      const o2SE = o2StdDev / Math.sqrt(o2N);
-
-      // ===== FIX: Check if standardError is effectively zero =====
-      const o2TValue = o2SE > EPSILON ? (o2Mean - o2Reference) / o2SE : 0;
-      // ============================================================
+      
+      const o2Differences = o2Readings.map(reading => reading - o2Reference);
+      const o2SumD = o2Differences.reduce((sum, d) => sum + d, 0);
+      const o2SumDSquared = o2Differences.reduce((sum, d) => sum + d * d, 0);
+      
+      const o2Numerator = o2SumD / o2N;
+      const o2Denominator = Math.sqrt((o2SumDSquared - (o2SumD * o2SumD) / o2N) / ((o2N - 1) * o2N));
+      
+      const o2TValue = o2Denominator > EPSILON ? o2Numerator / o2Denominator : 0;
 
       const o2Passed = Math.abs(o2TValue) <= CRITICAL_T_VALUE;
       const o2Slope = o2Mean !== 0 ? o2Reference / o2Mean : 1;

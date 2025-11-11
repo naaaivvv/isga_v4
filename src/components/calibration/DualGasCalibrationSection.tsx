@@ -156,6 +156,13 @@ export const DualGasCalibrationSection = ({
                   <p className="text-lg font-semibold">{co2Data.passed ? '✓ Pass' : '✗ Fail'}</p>
                 </div>
               </div>
+              <div className="pt-2 border-t mt-2">
+                <p className="text-xs text-muted-foreground mb-1">Correction Factor</p>
+                <p className="text-xs">
+                  Slope: {co2Data.correction_slope.toFixed(4)}<br />
+                  Intercept: {co2Data.correction_intercept.toFixed(4)}
+                </p>
+              </div>
             </div>
 
             {/* O2 Results */}
@@ -181,6 +188,13 @@ export const DualGasCalibrationSection = ({
                   <p className="text-xs text-muted-foreground">Status</p>
                   <p className="text-lg font-semibold">{o2Data.passed ? '✓ Pass' : '✗ Fail'}</p>
                 </div>
+              </div>
+              <div className="pt-2 border-t mt-2">
+                <p className="text-xs text-muted-foreground mb-1">Correction Factor</p>
+                <p className="text-xs">
+                  Slope: {o2Data.correction_slope.toFixed(4)}<br />
+                  Intercept: {o2Data.correction_intercept.toFixed(4)}
+                </p>
               </div>
             </div>
           </div>

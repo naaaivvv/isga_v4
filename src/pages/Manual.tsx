@@ -27,7 +27,7 @@ const Manual = () => {
       try {
         // This URL should be correct, pointing to your PHP backend
         const response = await fetch(
-          "http://192.168.1.6/isga_v4/php-backend/get_sensor_data.php",
+          "http://192.168.1.3/isga_v4/php-backend/get_sensor_data.php",
         );
         const data = await response.json();
         setFanActive(data.fan === 1);

@@ -99,7 +99,7 @@ const Scheduling = () => {
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
-        const response = await fetch("http://192.168.1.6/isga_v4/php-backend/get_schedule.php");
+        const response = await fetch("http://192.168.1.3/isga_v4/php-backend/get_schedule.php");
         const data = await response.json();
         const active = data.active === "1" || data.active === 1;
         const hours = Number(data.hours) || 0;

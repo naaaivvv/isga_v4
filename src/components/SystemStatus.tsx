@@ -147,7 +147,7 @@ const SystemStatus = () => {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3000);
         // Check if we can reach the PHP backend (which confirms ESP32 is sending data)
-        const response = await fetch("http://192.168.1.6/isga_v4/php-backend/get_sensor_data.php", {
+        const response = await fetch("http://192.168.1.3/isga_v4/php-backend/get_sensor_data.php", {
           method: "GET",
           signal: controller.signal,
         });
@@ -165,7 +165,7 @@ const SystemStatus = () => {
   // --- Fetch scheduling status from backend (and calculate time) ---
   const fetchAndHandleSchedule = useCallback(async () => {
     try {
-      const response = await fetch("http://192.168.1.6/isga_v4/php-backend/get_schedule.php");
+      const response = await fetch("http://192.168.1.3/isga_v4/php-backend/get_schedule.php");
       const data = await response.json();
 
       const active = data.active === "1" || data.active === 1;

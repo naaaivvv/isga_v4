@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Clock, Calendar, XCircle, Zap } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Calendar, XCircle, Zap, FlaskConical } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -261,13 +261,14 @@ const SystemStatus = () => {
           {isCalibrated && <CalibrationToggle />}
           <button
             onClick={toggleCO2FromO2}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            className={`p-2 rounded-md transition-colors ${
               useCO2FromO2
                 ? "bg-orange-500 text-white hover:bg-orange-600"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
+            title={`CO₂ from O₂ calculation ${useCO2FromO2 ? "enabled" : "disabled"}`}
           >
-            CO₂ from O₂ {useCO2FromO2 ? "ON" : "OFF"}
+            <FlaskConical className="w-4 h-4" />
           </button>
         </div>
       </div>

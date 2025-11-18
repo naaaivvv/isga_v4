@@ -74,10 +74,7 @@ const SensorDataCards = () => {
               <Droplet className="w-5 h-5 text-orange-500" />
               Carbon Dioxide (CO₂)
             </span>
-            <div className="flex gap-1">
-              {useCO2FromO2 && <Badge variant="outline" className="text-xs">O₂-based</Badge>}
-              {useCalibration && !useCO2FromO2 && <Badge variant="secondary" className="text-xs">Calibrated</Badge>}
-            </div>
+            {useCalibration && <Badge variant="secondary" className="text-xs">Calibrated</Badge>}
           </CardTitle>
           <CardDescription>Current CO₂ levels</CardDescription>
         </CardHeader>

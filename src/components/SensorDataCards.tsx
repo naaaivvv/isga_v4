@@ -60,7 +60,7 @@ const SensorDataCards = () => {
               </span>
               <span className="text-muted-foreground">ppm</span>
             </div>
-            <Progress value={Math.min(coLevel, 2000)} className="h-2" />
+            <Progress value={(Math.min(coLevel, 2000) / 2000) * 100} className="h-2" />
             <p className="text-sm text-muted-foreground">Safe limit: 50 ppm | Max detection: 2000 ppm</p>
           </div>
         </CardContent>

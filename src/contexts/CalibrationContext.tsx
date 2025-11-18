@@ -11,10 +11,12 @@ interface CalibrationContextType {
   useCalibration: boolean;
   toggleCalibration: () => void;
   applyCorrectionCO: (raw: number) => number;
-  applyCorrectionCO2: (raw: number) => number;
+  applyCorrectionCO2: (raw: number, o2Value?: number) => number;
   applyCorrectionO2: (raw: number) => number;
   isCalibrated: boolean;
   refreshCalibration: () => Promise<void>;
+  useCO2FromO2: boolean;
+  toggleCO2FromO2: () => void;
 }
 
 const CalibrationContext = createContext<CalibrationContextType | undefined>(undefined);
@@ -28,6 +30,7 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     o2: null,
   });
   const [useCalibration, setUseCalibration] = useState(true);
+  const [useCO2FromO2, setUseCO2FromO2] = useState(false);
 
   const fetchCalibrationFactors = async () => {
     try {
@@ -91,7 +94,12 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return Math.max(0, corrected); // Ensure non-negative
   };
 
-  const applyCorrectionCO2 = (raw: number): number => {
+  const applyCorrectionCO2 = (raw: number, o2Value?: number): number => {
+    // If O2-based calculation is enabled, calculate CO2 from O2
+    if (useCO2FromO2 && o2Value !== undefined) {
+      return Math.max(0, 20.90 - o2Value);
+    }
+    
     if (!useCalibration || !calibrationFactors.co2 || !calibrationFactors.co2.passed) {
       return raw;
     }
@@ -111,6 +119,10 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setUseCalibration(prev => !prev);
   };
 
+  const toggleCO2FromO2 = () => {
+    setUseCO2FromO2(prev => !prev);
+  };
+
   const isCalibrated = !!(
     calibrationFactors.co?.passed || 
     calibrationFactors.co2?.passed || 
@@ -128,6 +140,8 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         applyCorrectionO2,
         isCalibrated,
         refreshCalibration: fetchCalibrationFactors,
+        useCO2FromO2,
+        toggleCO2FromO2,
       }}
     >
       {children}

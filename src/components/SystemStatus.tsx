@@ -248,7 +248,7 @@ const SystemStatus = () => {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const { isCalibrated } = useCalibrationContext();
+  const { isCalibrated, toggleCO2FromO2, useCO2FromO2 } = useCalibrationContext();
 
   return (
     <div className="bg-card rounded-xl shadow-md p-6 mb-8">
@@ -257,7 +257,19 @@ const SystemStatus = () => {
           <AlertCircle className="w-5 h-5 text-primary" />
           System Status
         </h2>
-        {isCalibrated && <CalibrationToggle />}
+        <div className="flex items-center gap-3">
+          {isCalibrated && <CalibrationToggle />}
+          <button
+            onClick={toggleCO2FromO2}
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              useCO2FromO2
+                ? "bg-orange-500 text-white hover:bg-orange-600"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            CO₂ from O₂ {useCO2FromO2 ? "ON" : "OFF"}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">

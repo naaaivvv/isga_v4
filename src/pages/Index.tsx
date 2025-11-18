@@ -48,12 +48,15 @@ const Index = () => {
 
   // Apply calibration to historical data based on toggle
   const historicalData = useMemo(() => {
-    return historicalDataRaw.map(item => ({
-      timestamp: item.timestamp,
-      co: Math.min(applyCorrectionCO(item.co), 2000), // Cap CO at 2000 ppm
-      co2: applyCorrectionCO2(item.co2),
-      o2: applyCorrectionO2(item.o2),
-    }));
+    return historicalDataRaw.map(item => {
+      const o2Corrected = applyCorrectionO2(item.o2);
+      return {
+        timestamp: item.timestamp,
+        co: Math.min(applyCorrectionCO(item.co), 2000), // Cap CO at 2000 ppm
+        co2: applyCorrectionCO2(item.co2, o2Corrected),
+        o2: o2Corrected,
+      };
+    });
   }, [historicalDataRaw, applyCorrectionCO, applyCorrectionCO2, applyCorrectionO2]);
 
   return (

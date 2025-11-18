@@ -10,7 +10,7 @@ const SensorDataCards = () => {
   const [co2Raw, setCo2Raw] = useState(0);
   const [o2Raw, setO2Raw] = useState(0);
   
-  const { applyCorrectionCO, applyCorrectionCO2, applyCorrectionO2, useCalibration } = useCalibrationContext();
+  const { applyCorrectionCO, applyCorrectionCO2, applyCorrectionO2, useCalibration, useCO2FromO2 } = useCalibrationContext();
 
   // Fetch sensor data
   useEffect(() => {
@@ -35,8 +35,8 @@ const SensorDataCards = () => {
 
   // Apply calibration based on toggle
   const coLevel = applyCorrectionCO(coRaw);
-  const co2Level = applyCorrectionCO2(co2Raw);
   const o2Level = applyCorrectionO2(o2Raw);
+  const co2Level = applyCorrectionCO2(co2Raw, o2Level);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -74,7 +74,10 @@ const SensorDataCards = () => {
               <Droplet className="w-5 h-5 text-orange-500" />
               Carbon Dioxide (CO₂)
             </span>
-            {useCalibration && <Badge variant="secondary" className="text-xs">Calibrated</Badge>}
+            <div className="flex gap-1">
+              {useCO2FromO2 && <Badge variant="outline" className="text-xs">O₂-based</Badge>}
+              {useCalibration && !useCO2FromO2 && <Badge variant="secondary" className="text-xs">Calibrated</Badge>}
+            </div>
           </CardTitle>
           <CardDescription>Current CO₂ levels</CardDescription>
         </CardHeader>

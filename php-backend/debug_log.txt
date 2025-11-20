@@ -1,0 +1,312 @@
+[2025-11-20 13:16:03] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 3780
+    [o2] => 20.7100
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:08] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 723
+    [o2] => 20.6800
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:13] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.00
+    [co2] => 1596
+    [o2] => 20.7000
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:18] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.03
+    [co2] => 3753
+    [o2] => 20.7300
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:23] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 1778
+    [o2] => 20.8000
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:28] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 723
+    [o2] => 20.8400
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:33] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.00
+    [co2] => 1596
+    [o2] => 20.7800
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:38] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 3753
+    [o2] => 20.7100
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:44] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.02
+    [co2] => 1778
+    [o2] => 20.6800
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:49] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 723
+    [o2] => 20.6200
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:54] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.02
+    [co2] => 3081
+    [o2] => 20.6800
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:16:59] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.02
+    [co2] => 3892
+    [o2] => 20.7200
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:04] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 798
+    [o2] => 20.7800
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:09] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 723
+    [o2] => 20.7500
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:14] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 3081
+    [o2] => 20.7200
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:19] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 3892
+    [o2] => 20.7500
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:24] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 798
+    [o2] => 20.7200
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:29] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 723
+    [o2] => 20.7300
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:34] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.02
+    [co2] => 3081
+    [o2] => 20.6900
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:40] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.02
+    [co2] => 3892
+    [o2] => 20.6500
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:45] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 741
+    [o2] => 20.7000
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:52] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 798
+    [o2] => 20.7600
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:17:57] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 3753
+    [o2] => 20.7300
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:18:02] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 3948
+    [o2] => 20.7600
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:18:07] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.03
+    [co2] => 723
+    [o2] => 20.7100
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------
+[2025-11-20 13:18:12] Incoming Data:
+Array
+(
+    [node_name] => node111
+    [co] => 0.01
+    [co2] => 798
+    [o2] => 20.7200
+    [fan] => 0
+    [compressor] => 0
+)
+
+--------------------

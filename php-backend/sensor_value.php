@@ -25,6 +25,17 @@ if ($conn->connect_error) {
 
 // Check if data is coming from the ESP32 POST request
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    // ================== DEBUGGING START ==================
+    // This will save all incoming data to 'debug_log.txt'
+    $logFile = 'debug_log.txt';
+    $timestamp = date("Y-m-d H:i:s");
+    $dataLog = "[$timestamp] Incoming Data:\n" . print_r($_POST, true) . "\n--------------------\n";
+    file_put_contents($logFile, $dataLog, FILE_APPEND);
+    // ================== DEBUGGING END ====================
+    
+    // Read data from $_POST
+    $node_name = isset($_POST['node_name']) ? $_POST['node_name'] : "node_unknown";
     
     // Read data from $_POST
     $node_name = isset($_POST['node_name']) ? $_POST['node_name'] : "node_unknown";

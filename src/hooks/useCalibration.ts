@@ -16,7 +16,7 @@ type GasType = 'CO' | 'CO2' | 'O2';
 
 // === IMPORTANT ===
 // Make sure this IP address is correct for your PHP server
-const BACKEND_URL = 'http://192.168.1.3/isga_v4/php-backend'; 
+const BACKEND_URL = 'http://192.168.0.100/isga_v4/php-backend'; 
 // =================
 
 const TOTAL_READINGS = 30;

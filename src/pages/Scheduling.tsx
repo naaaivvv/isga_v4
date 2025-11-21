@@ -118,23 +118,21 @@ const Scheduling = () => {
     };
   }, []); 
 
-  // --- New listener for timer synchronization ---
+  // --- Listen for timer updates from SystemStatus ---
   useEffect(() => {
     const handleTimeUpdate = (event: CustomEvent) => {
-      const newTime = event.detail;
-      setRemainingTime(newTime);
-      // If time is 0 but schedule is active, it's reading
-      if (newTime === 0 && config.active) {
-        setIsReading(true);
-      } else {
-        setIsReading(false);
-      }
+      setRemainingTime(event.detail);
+    };
+    const handleReadingStatus = (event: CustomEvent) => {
+      setIsReading(event.detail);
     };
     window.addEventListener('timeUpdated', handleTimeUpdate as EventListener);
+    window.addEventListener('readingStatusChanged', handleReadingStatus as EventListener);
     return () => {
       window.removeEventListener('timeUpdated', handleTimeUpdate as EventListener);
+      window.removeEventListener('readingStatusChanged', handleReadingStatus as EventListener);
     };
-  }, [config.active]); // Re-run if config.active changes
+  }, []);
 
   // --- Convert seconds to HH:MM:SS ---
   const formatTime = (seconds: number) => {
@@ -157,9 +155,11 @@ const Scheduling = () => {
     setConfig(prev => ({ ...prev, minutes }));
   };
   
-  // --- Save on blur ---
-  const handleSaveOnBlur = () => {
-    saveConfig(config);
+  // --- Save on blur (only if not active) ---
+  const handleSaveOnBlur = async () => {
+    if (!config.active) {
+      await saveConfig(config, true);
+    }
   };
 
   return (

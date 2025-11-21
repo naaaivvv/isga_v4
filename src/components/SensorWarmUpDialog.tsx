@@ -18,23 +18,35 @@ const WARMUP_DURATION = 300; // 5 minutes in seconds
 
 export const SensorWarmUpDialog = ({ isOpen, onComplete }: SensorWarmUpDialogProps) => {
   const [remainingSeconds, setRemainingSeconds] = useState(WARMUP_DURATION);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setRemainingSeconds(WARMUP_DURATION);
+      setStartTime(null);
       return;
     }
 
-    const timer = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setTimeout(onComplete, 500);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Set start time when dialog opens
+    const dialogStartTime = Date.now();
+    setStartTime(dialogStartTime);
+
+    const updateTimer = () => {
+      const elapsed = Math.floor((Date.now() - dialogStartTime) / 1000);
+      const remaining = Math.max(0, WARMUP_DURATION - elapsed);
+      
+      setRemainingSeconds(remaining);
+      
+      if (remaining === 0) {
+        setTimeout(onComplete, 500);
+      }
+    };
+
+    // Update immediately
+    updateTimer();
+
+    // Update every second
+    const timer = setInterval(updateTimer, 1000);
 
     return () => clearInterval(timer);
   }, [isOpen, onComplete]);

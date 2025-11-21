@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Nov 21, 2025 at 05:05 PM
+-- Generation Time: Nov 21, 2025 at 05:21 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS `co2_settings` (
 --
 
 INSERT INTO `co2_settings` (`id`, `use_co2_from_o2`, `updated_at`) VALUES
-(1, 0, '2025-11-21 17:05:00');
+(1, 1, '2025-11-21 17:19:14');
 
 -- --------------------------------------------------------
 
@@ -94,8 +94,7 @@ CREATE TABLE IF NOT EXISTS `schedule` (
 --
 
 INSERT INTO `schedule` (`id`, `hours`, `minutes`, `active`, `updated_at`) VALUES
-(1, 0, 1, 0, '2025-11-03 07:34:44'),
-(2, 0, 30, 0, '2025-11-10 15:43:40');
+(1, 0, 1, 1, '2025-11-21 17:21:52');
 
 -- --------------------------------------------------------
 
@@ -115,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `sensor` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=999 DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `sensor`
@@ -1111,7 +1110,9 @@ INSERT INTO `sensor` (`id`, `node_name`, `co`, `co2`, `o2`, `fan`, `compressor`,
 (995, 'node111', 499.2, 0.044, 20.91, 0, 0, '2025-11-11 11:08:34', '2025-11-11 11:08:34'),
 (996, 'node111', 500, 0.0442, 20.89, 0, 0, '2025-11-11 11:08:56', '2025-11-11 11:08:56'),
 (997, 'node111', 503.1, 0.0438, 20.5, 0, 0, '2025-11-11 11:09:21', '2025-11-18 18:50:51'),
-(998, 'node111', 498.5, 0.045, 20.72, 0, 0, '2025-11-11 11:09:48', '2025-11-18 19:14:51');
+(998, 'node111', 498.5, 0.045, 20.81, 0, 0, '2025-11-11 11:09:48', '2025-11-21 17:07:58'),
+(999, 'node111', 500.5, 0.048, 20.68, 0, 0, '2025-11-11 11:09:48', '2025-11-21 17:07:58'),
+(1000, 'node111', 500.5, 0.38, 20.68, 0, 0, '2025-11-11 11:09:48', '2025-11-21 17:07:58');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

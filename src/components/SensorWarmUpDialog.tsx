@@ -18,35 +18,40 @@ const WARMUP_DURATION = 300; // 5 minutes in seconds
 
 export const SensorWarmUpDialog = ({ isOpen, onComplete }: SensorWarmUpDialogProps) => {
   const [remainingSeconds, setRemainingSeconds] = useState(WARMUP_DURATION);
-  const [startTime, setStartTime] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setRemainingSeconds(WARMUP_DURATION);
-      setStartTime(null);
+      sessionStorage.removeItem('warmUpStartTime');
       return;
     }
 
-    // Set start time when dialog opens
-    const dialogStartTime = Date.now();
-    setStartTime(dialogStartTime);
+    // Get or create warm-up start time (same pattern as UptimeContext)
+    let warmUpStart = sessionStorage.getItem('warmUpStartTime');
+    
+    if (!warmUpStart) {
+      warmUpStart = Date.now().toString();
+      sessionStorage.setItem('warmUpStartTime', warmUpStart);
+    }
 
-    const updateTimer = () => {
-      const elapsed = Math.floor((Date.now() - dialogStartTime) / 1000);
+    // Calculate remaining time (same pattern as UptimeContext)
+    const calculateRemaining = () => {
+      const elapsed = Math.floor((Date.now() - parseInt(warmUpStart!)) / 1000);
       const remaining = Math.max(0, WARMUP_DURATION - elapsed);
       
       setRemainingSeconds(remaining);
       
       if (remaining === 0) {
+        sessionStorage.removeItem('warmUpStartTime');
         setTimeout(onComplete, 500);
       }
     };
 
-    // Update immediately
-    updateTimer();
+    // Calculate immediately
+    calculateRemaining();
 
     // Update every second
-    const timer = setInterval(updateTimer, 1000);
+    const timer = setInterval(calculateRemaining, 1000);
 
     return () => clearInterval(timer);
   }, [isOpen, onComplete]);

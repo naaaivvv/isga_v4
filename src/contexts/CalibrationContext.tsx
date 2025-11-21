@@ -19,7 +19,20 @@ interface CalibrationContextType {
   toggleCO2FromO2: () => void;
 }
 
-const CalibrationContext = createContext<CalibrationContextType | undefined>(undefined);
+const defaultContextValue: CalibrationContextType = {
+  calibrationFactors: { co: null, co2: null, o2: null },
+  useCalibration: true,
+  toggleCalibration: () => {},
+  applyCorrectionCO: (raw: number) => raw,
+  applyCorrectionCO2: (raw: number) => raw,
+  applyCorrectionO2: (raw: number) => raw,
+  isCalibrated: false,
+  refreshCalibration: async () => {},
+  useCO2FromO2: false,
+  toggleCO2FromO2: () => {},
+};
+
+const CalibrationContext = createContext<CalibrationContextType>(defaultContextValue);
 
 const BACKEND_URL = 'http://192.168.1.3/isga_v4/php-backend';
 
@@ -187,8 +200,5 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
 export const useCalibrationContext = () => {
   const context = useContext(CalibrationContext);
-  if (context === undefined) {
-    throw new Error('useCalibrationContext must be used within a CalibrationProvider');
-  }
   return context;
 };

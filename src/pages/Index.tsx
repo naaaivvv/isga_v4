@@ -28,7 +28,7 @@ const Index = () => {
   useEffect(() => {
     const fetchHistoricalData = async () => {
       try {
-        const response = await fetch("http://192.168.1.3/isga_v4/php-backend/get_sensor_history.php");
+        const response = await fetch("http://192.168.0.100/isga_v4/php-backend/get_sensor_history.php");
         const data: HistoricalData[] = await response.json();
 
         // Store raw data (CO2 already in percent format)

@@ -16,7 +16,7 @@ const SensorDataCards = () => {
   useEffect(() => {
     const fetchSensorData = async () => {
       try {
-        const response = await fetch("http://192.168.1.3/isga_v4/php-backend/get_sensor_data.php");
+        const response = await fetch("http://192.168.0.100/isga_v4/php-backend/get_sensor_data.php");
         const data = await response.json();
 
         // Store raw values

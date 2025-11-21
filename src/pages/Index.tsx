@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useCalibrationContext } from "@/contexts/CalibrationContext";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 interface HistoricalData {
   timestamp: string;
@@ -19,6 +21,8 @@ interface HistoricalData {
 const Index = () => {
   const [historicalDataRaw, setHistoricalDataRaw] = useState<HistoricalData[]>([]);
   const { applyCorrectionCO, applyCorrectionCO2, applyCorrectionO2 } = useCalibrationContext();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch historical sensor data
   useEffect(() => {
@@ -58,6 +62,18 @@ const Index = () => {
       };
     });
   }, [historicalDataRaw, applyCorrectionCO, applyCorrectionCO2, applyCorrectionO2]);
+
+  // Table data (reversed for descending order - most recent first)
+  const tableData = useMemo(() => {
+    return [...historicalData].reverse();
+  }, [historicalData]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(tableData.length / itemsPerPage);
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return tableData.slice(startIndex, startIndex + itemsPerPage);
+  }, [tableData, currentPage]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -204,6 +220,73 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Sensor Data Table */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Recent Sensor Data</CardTitle>
+            <CardDescription>Historical sensor readings with timestamps</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>CO (ppm)</TableHead>
+                  <TableHead>CO₂ (%)</TableHead>
+                  <TableHead>O₂ (%)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((item, index) => (
+                    <TableRow key={`${item.timestamp}-${index}`}>
+                      <TableCell>
+                        {new Date(item.timestamp).toLocaleString()}
+                      </TableCell>
+                      <TableCell>{item.co.toFixed(1)}</TableCell>
+                      <TableCell>{item.co2.toFixed(4)}</TableCell>
+                      <TableCell>{item.o2.toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      No data available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

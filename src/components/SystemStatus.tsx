@@ -23,9 +23,12 @@ interface SchedulingConfig {
   updatedAt?: string;
 }
 
-// --- Helper function to dispatch timer updates ---
+// --- Helper functions to dispatch updates ---
 const dispatchTimeUpdate = (timeInSeconds: number) => {
   window.dispatchEvent(new CustomEvent('timeUpdated', { detail: timeInSeconds }));
+};
+const dispatchReadingStatus = (isReading: boolean) => {
+  window.dispatchEvent(new CustomEvent('readingStatusChanged', { detail: isReading }));
 };
 
 const SystemStatus = () => {
@@ -62,10 +65,12 @@ const SystemStatus = () => {
     if (!config.active) {
         console.log("Cycle aborted: Schedule is inactive.");
         setIsReading(false);
+        dispatchReadingStatus(false);
         setRemainingTime(0);
         return;
     }
     setIsReading(true);
+    dispatchReadingStatus(true);
     let commandsSuccessful = false;
     toast({ title: "Cycle Started", description: "Executing automatic sensor reading sequence..." });
     try {
@@ -111,16 +116,17 @@ const SystemStatus = () => {
       console.error("Critical Error in Cycle Execution:", error);
     } finally {
       setIsReading(false);
+      dispatchReadingStatus(false);
       if (config.active) {
         const totalSeconds = config.hours * 3600 + config.minutes * 60;
         setRemainingTime(totalSeconds);
-        dispatchTimeUpdate(totalSeconds); // Broadcast update
+        dispatchTimeUpdate(totalSeconds);
         saveConfig({ ...config, active: true }, true); 
         const cycleStatus = commandsSuccessful ? "Commands Sent" : "Failed - Hardware Offline";
         toast({ title: `Cycle Finished (${cycleStatus})`, description: `Next reading in ${config.hours}h ${config.minutes}m`, duration: 3000 });
       } else {
         setRemainingTime(0);
-        dispatchTimeUpdate(0); // Broadcast update
+        dispatchTimeUpdate(0);
         console.log("Countdown reset aborted: Schedule was manually deactivated.");
       }
     }
@@ -193,6 +199,7 @@ const SystemStatus = () => {
         setRemainingTime(0);
         dispatchTimeUpdate(0);
         setIsReading(false);
+        dispatchReadingStatus(false);
       }
     } catch (error) {
       console.error("Error fetching scheduling status:", error);

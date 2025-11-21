@@ -20,7 +20,10 @@ export const SensorWarmUpDialog = ({ isOpen, onComplete }: SensorWarmUpDialogPro
   const [remainingSeconds, setRemainingSeconds] = useState(WARMUP_DURATION);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setRemainingSeconds(WARMUP_DURATION);
+      return;
+    }
 
     const timer = setInterval(() => {
       setRemainingSeconds((prev) => {
@@ -59,39 +62,40 @@ export const SensorWarmUpDialog = ({ isOpen, onComplete }: SensorWarmUpDialogPro
           <AlertDialogTitle className="text-center text-2xl">
             Sensors Warming Up
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-center space-y-4">
-            <p className="text-base">
-              Please wait while the gas sensors reach optimal operating temperature.
-              This process ensures accurate readings.
-            </p>
-            
-            <div className="bg-muted rounded-lg p-4 space-y-3">
-              <div className="flex items-center justify-center gap-2 text-lg font-semibold text-foreground">
-                <Clock className="w-5 h-5 text-primary" />
-                <span className="font-mono text-2xl">{formatTime(remainingSeconds)}</span>
-              </div>
-              
-              <Progress value={progress} className="h-2" />
-              
-              <p className="text-sm text-muted-foreground">
-                {remainingSeconds > 240 ? "Initializing sensors..." : 
-                 remainingSeconds > 120 ? "Stabilizing temperature..." :
-                 remainingSeconds > 60 ? "Almost ready..." :
-                 "Final calibration..."}
-              </p>
-            </div>
-
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-              <p className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>
-                  Do not disconnect power or interrupt the system during this warm-up period.
-                  Sensor readings will be available once complete.
-                </span>
-              </p>
-            </div>
-          </AlertDialogDescription>
         </AlertDialogHeader>
+        
+        <div className="text-center space-y-4 text-sm text-muted-foreground">
+          <div className="text-base">
+            Please wait while the gas sensors reach optimal operating temperature.
+            This process ensures accurate readings.
+          </div>
+          
+          <div className="bg-muted rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-center gap-2 text-lg font-semibold text-foreground">
+              <Clock className="w-5 h-5 text-primary" />
+              <span className="font-mono text-2xl">{formatTime(remainingSeconds)}</span>
+            </div>
+            
+            <Progress value={progress} className="h-2" />
+            
+            <div className="text-sm text-muted-foreground">
+              {remainingSeconds > 240 ? "Initializing sensors..." : 
+               remainingSeconds > 120 ? "Stabilizing temperature..." :
+               remainingSeconds > 60 ? "Almost ready..." :
+               "Final calibration..."}
+            </div>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <div className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>
+                Do not disconnect power or interrupt the system during this warm-up period.
+                Sensor readings will be available once complete.
+              </span>
+            </div>
+          </div>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );

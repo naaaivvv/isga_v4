@@ -32,6 +32,34 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [useCalibration, setUseCalibration] = useState(true);
   const [useCO2FromO2, setUseCO2FromO2] = useState(false);
 
+  // Fetch CO2 from O2 setting from backend
+  const fetchCO2Setting = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/get_co2_setting.php`);
+      if (response.ok) {
+        const data = await response.json();
+        setUseCO2FromO2(data.use_co2_from_o2 === 1);
+      }
+    } catch (error) {
+      console.error('Error fetching CO2 setting:', error);
+    }
+  };
+
+  // Save CO2 from O2 setting to backend
+  const saveCO2Setting = async (enabled: boolean) => {
+    try {
+      const formData = new FormData();
+      formData.append('use_co2_from_o2', enabled ? '1' : '0');
+      
+      await fetch(`${BACKEND_URL}/save_co2_setting.php`, {
+        method: 'POST',
+        body: formData,
+      });
+    } catch (error) {
+      console.error('Error saving CO2 setting:', error);
+    }
+  };
+
   const fetchCalibrationFactors = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/get_calibration.php`);
@@ -80,9 +108,13 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     fetchCalibrationFactors();
+    fetchCO2Setting();
     
     // Refresh calibration factors every 30 seconds
-    const interval = setInterval(fetchCalibrationFactors, 30000);
+    const interval = setInterval(() => {
+      fetchCalibrationFactors();
+      fetchCO2Setting();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -120,7 +152,11 @@ export const CalibrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const toggleCO2FromO2 = () => {
-    setUseCO2FromO2(prev => !prev);
+    setUseCO2FromO2(prev => {
+      const newValue = !prev;
+      saveCO2Setting(newValue);
+      return newValue;
+    });
   };
 
   const isCalibrated = !!(

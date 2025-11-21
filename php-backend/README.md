@@ -19,8 +19,11 @@
    - Open phpMyAdmin (http://localhost/phpmyadmin)
    - Select your `isga` database
    - Go to SQL tab
-   - Copy and paste the contents of `database.sql`
-   - Click "Go" to execute
+   - Execute the following SQL files in order:
+     1. `database.sql` (schedule and calibration tables)
+     2. `database_calibration.sql` (detailed calibration table)
+     3. `database_co2_settings.sql` (CO2 from O2 calculation setting)
+   - Click "Go" to execute each script
 
 3. **Update your React app configuration**
    - Open `src/lib/api.ts` in your React project

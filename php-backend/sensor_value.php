@@ -45,12 +45,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $fan = isset($_POST['fan']) ? intval($_POST['fan']) : 0;
     $compressor = isset($_POST['compressor']) ? intval($_POST['compressor']) : 0;
 
+    // --- Check CO2 from O2 setting ---
+    // This setting determines whether CO2 values should be calculated from O2 readings
+    // When enabled, CO2 = 20.9% - O2% (since CO2 and O2 are complementary in controlled environments)
+    // This affects ALL parts of the system: display, history, calibration, and database storage
+    $use_co2_from_o2 = 0;
+    $settingResult = $conn->query("SELECT use_co2_from_o2 FROM co2_settings WHERE id = 1 LIMIT 1");
+    if ($settingResult && $settingResult->num_rows > 0) {
+        $settingRow = $settingResult->fetch_assoc();
+        $use_co2_from_o2 = intval($settingRow['use_co2_from_o2']);
+    }
+
     // --- Data Processing and Conversion ---
     
-    // Convert CO2 from PPM (parts per million) to Percentage (%)
-    // Formula: % = PPM / 10000
-    // Example: 400 ppm is 0.04%
-    $co2_percent = $co2_ppm / 10000;
+    // If CO2 from O2 calculation is enabled, calculate CO2 as 20.9 - O2
+    if ($use_co2_from_o2 === 1) {
+        $co2_percent = max(0, 20.90 - $o2);
+    } else {
+        // Convert CO2 from PPM (parts per million) to Percentage (%)
+        // Formula: % = PPM / 10000
+        // Example: 400 ppm is 0.04%
+        $co2_percent = $co2_ppm / 10000;
+    }
     
     // Prepare and execute the INSERT statement
     // CO is saved as PPM ($co_ppm)

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUptime } from "@/contexts/UptimeContext";
 import { useCalibrationContext } from "@/contexts/CalibrationContext";
 import { CalibrationToggle } from "@/components/CalibrationToggle";
+import { SensorWarmUpDialog } from "@/components/SensorWarmUpDialog";
 import { 
   sendESP32Command, 
   saveSchedule as saveScheduleApi,
@@ -35,6 +36,11 @@ const SystemStatus = () => {
   const { toast } = useToast();
   const { uptime: uptimeSeconds } = useUptime();
   const [connectionActive, setConnectionActive] = useState(false);
+  const [showWarmUpDialog, setShowWarmUpDialog] = useState(false);
+  const [warmUpCompleted, setWarmUpCompleted] = useState(() => {
+    // Check if warm-up was already completed in this session
+    return localStorage.getItem('sensorWarmUpCompleted') === 'true';
+  });
   
   // --- All state logic is moved here ---
   const [config, setConfig] = useState<SchedulingConfig>({
@@ -158,7 +164,15 @@ const SystemStatus = () => {
           signal: controller.signal,
         });
         clearTimeout(timeout);
-        setConnectionActive(response.ok);
+        const wasActive = connectionActive;
+        const isNowActive = response.ok;
+        
+        setConnectionActive(isNowActive);
+        
+        // Trigger warm-up dialog when connection becomes active for the first time
+        if (!wasActive && isNowActive && !warmUpCompleted) {
+          setShowWarmUpDialog(true);
+        }
       } catch {
         setConnectionActive(false);
       }
@@ -166,7 +180,18 @@ const SystemStatus = () => {
     checkConnection();
     const interval = setInterval(checkConnection, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [connectionActive, warmUpCompleted]);
+
+  const handleWarmUpComplete = () => {
+    setShowWarmUpDialog(false);
+    setWarmUpCompleted(true);
+    localStorage.setItem('sensorWarmUpCompleted', 'true');
+    toast({ 
+      title: "Sensors Ready", 
+      description: "Warm-up complete. All sensors are now operational.",
+      duration: 4000 
+    });
+  };
 
   // --- Fetch scheduling status from backend (and calculate time) ---
   const fetchAndHandleSchedule = useCallback(async () => {
@@ -258,8 +283,14 @@ const SystemStatus = () => {
   const { isCalibrated, toggleCO2FromO2, useCO2FromO2 } = useCalibrationContext();
 
   return (
-    <div className="bg-card rounded-xl shadow-md p-6 mb-8">
-      <div className="flex items-center justify-between mb-6">
+    <>
+      <SensorWarmUpDialog 
+        isOpen={showWarmUpDialog} 
+        onComplete={handleWarmUpComplete}
+      />
+      
+      <div className="bg-card rounded-xl shadow-md p-6 mb-8">
+        <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-card-foreground flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-primary" />
           System Status
@@ -331,6 +362,7 @@ const SystemStatus = () => {
         </Badge>
       </div>
     </div>
+    </>
   );
 };
 
